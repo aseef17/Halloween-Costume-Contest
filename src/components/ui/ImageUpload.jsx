@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Loader2, Camera } from "lucide-react";
 import Button from "./Button";
 import { storage } from "../../firebaseConfig";
 import {
@@ -22,6 +22,7 @@ const ImageUpload = ({
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -131,60 +132,103 @@ const ImageUpload = ({
           </div>
         </div>
       ) : (
-        <div
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-            dragActive
-              ? "border-orange-400 bg-orange-500/10"
-              : "border-orange-500/30 bg-black/20 hover:border-orange-500/50 hover:bg-black/30"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={() =>
-            !disabled && !isUploading && fileInputRef.current?.click()
-          }
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileInput}
-            className="hidden"
-            disabled={disabled}
-          />
+        <div className={`w-full ${className}`}>
+          <div
+            className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
+              dragActive
+                ? "border-orange-400 bg-orange-500/10"
+                : "border-orange-500/30 bg-black/20"
+            } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileInput}
+              className="hidden"
+              disabled={disabled}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileInput}
+              className="hidden"
+              disabled={disabled}
+            />
 
-          {isUploading ? (
-            <div className="flex flex-col items-center gap-4">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              >
-                <Loader2 className="w-8 h-8 text-orange-400" />
-              </motion.div>
-              <p className="text-orange-300 font-medium">Uploading image...</p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <motion.div
-                animate={{ y: [0, -5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Upload className="w-8 h-8 text-orange-400" />
-              </motion.div>
-              <div>
-                <p className="text-orange-300 font-medium mb-2">
-                  Upload Costume Image
-                </p>
-                <p className="text-gray-400 text-sm">
-                  Drag & drop an image or click to browse
-                </p>
-                <p className="text-gray-500 text-xs mt-1">
-                  Max size: 5MB • JPG, PNG, GIF supported
+            {isUploading ? (
+              <div className="flex flex-col items-center gap-4">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-8 h-8 text-orange-400" />
+                </motion.div>
+                <p className="text-orange-300 font-medium">
+                  Uploading image...
                 </p>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col items-center gap-4">
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Upload className="w-8 h-8 text-orange-400" />
+                </motion.div>
+                <div>
+                  <p className="text-orange-300 font-medium mb-2">
+                    Upload Costume Image
+                  </p>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Drag & drop an image or use options below
+                  </p>
+
+                  {/* Action buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        !disabled &&
+                          !isUploading &&
+                          cameraInputRef.current?.click();
+                      }}
+                      disabled={disabled || isUploading}
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white px-6 py-3 rounded-xl font-semibold transition-all"
+                    >
+                      <Camera className="w-5 h-5" />
+                      <span>Take Photo</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        !disabled &&
+                          !isUploading &&
+                          fileInputRef.current?.click();
+                      }}
+                      disabled={disabled || isUploading}
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-orange-700 hover:from-orange-600 hover:to-orange-800 text-white px-6 py-3 rounded-xl font-semibold transition-all"
+                    >
+                      <ImageIcon className="w-5 h-5" />
+                      <span>Choose from Gallery</span>
+                    </Button>
+                  </div>
+
+                  <p className="text-gray-500 text-xs mt-4">
+                    Max size: 5MB • JPG, PNG, GIF supported
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
