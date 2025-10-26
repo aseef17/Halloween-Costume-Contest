@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import logger from "../utils/logger";
 
 export const CostumeService = {
   // Submit a new costume
@@ -39,7 +40,7 @@ export const CostumeService = {
       const docRef = await addDoc(collection(db, "costumes"), newCostume);
       return { id: docRef.id, ...newCostume };
     } catch (error) {
-      console.error("Error creating costume:", error);
+      logger.error("Error creating costume:", error);
       throw error;
     }
   },
@@ -57,7 +58,7 @@ export const CostumeService = {
       await updateDoc(costumeRef, updates);
       return { id: costumeId, ...updates };
     } catch (error) {
-      console.error("Error updating costume:", error);
+      logger.error("Error updating costume:", error);
       throw error;
     }
   },
@@ -69,7 +70,7 @@ export const CostumeService = {
       await deleteDoc(costumeRef);
       return true;
     } catch (error) {
-      console.error("Error deleting costume:", error);
+      logger.error("Error deleting costume:", error);
       throw error;
     }
   },
@@ -102,7 +103,7 @@ export const CostumeService = {
       const voteRef = await addDoc(collection(db, "votes"), newVote);
       return { id: voteRef.id, ...newVote };
     } catch (error) {
-      console.error("Error voting for costume:", error);
+      logger.error("Error voting for costume:", error);
       throw error;
     }
   },
@@ -114,7 +115,7 @@ export const CostumeService = {
       await deleteDoc(voteRef);
       return true;
     } catch (error) {
-      console.error("Error removing vote:", error);
+      logger.error("Error removing vote:", error);
       throw error;
     }
   },
