@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://yourprojectsite.com/docs
+    about: Check the documentation before submitting a new issue.
+  - name: 💬 Questions or Support
+    url: https://github.com/<your-org>/<your-repo>/discussions
+    about: Ask general questions or request help in Discussions.
