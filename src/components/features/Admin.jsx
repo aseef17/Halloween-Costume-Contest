@@ -545,11 +545,10 @@ const Admin = ({ onSwitchToDashboard }) => {
                       Reset Contest
                     </h3>
                     <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
-                      This will delete all costumes and votes, and reset the
-                      contest settings.
+                      This will delete all costumes, votes, ALL users, images, and reset contest settings.
                     </p>
                     <p className="text-red-400 text-xs sm:text-sm font-semibold mt-2">
-                      ⚠️ This action cannot be undone!
+                      ⚠️ This action cannot be undone! Everyone (including admins) will need to log back in.
                     </p>
                   </div>
                   {!showConfirmReset ? (

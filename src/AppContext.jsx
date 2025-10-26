@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useMemo } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection,
   doc,
@@ -9,6 +9,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "./firebaseConfig";
 import { ADMIN_EMAILS } from "./utils";
+import logger from "./utils/logger";
 
 // Create contexts
 const AppContext = createContext(null);
@@ -33,35 +34,68 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
-        // Check if user exists in Firestore, if not create profile
-        const userRef = doc(db, "users", fbUser.uid);
-        const userSnap = await getDoc(userRef);
+        try {
+          // First, check if there was a recent reset
+          const settingsRef = doc(db, "appSettings", "settings");
+          const settingsSnap = await getDoc(settingsRef);
+          const settings = settingsSnap.exists() ? settingsSnap.data() : null;
+          const lastReset = settings?.lastReset?.toDate();
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setUser({
-            uid: fbUser.uid,
-            email: fbUser.email,
-            displayName: fbUser.displayName || userData.displayName || "",
-            role: userData.role || "user",
-            lastLogin: new Date(),
-          });
-          setIsAdmin(
-            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
-          );
-        } else {
-          // Create new user document
-          const newUser = {
-            uid: fbUser.uid,
-            email: fbUser.email,
-            displayName: fbUser.displayName || "",
-            role: ADMIN_EMAILS.includes(fbUser.email) ? "admin" : "user",
-            createdAt: new Date(),
-            lastLogin: new Date(),
-          };
-          await setDoc(userRef, newUser);
-          setUser(newUser);
-          setIsAdmin(ADMIN_EMAILS.includes(fbUser.email));
+          // Check if user exists in Firestore
+          const userRef = doc(db, "users", fbUser.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const userLastLogin = userData.lastLogin?.toDate();
+
+            // If user's last login was before the last reset, their account was deleted
+            // Force them to log out and log back in
+            if (lastReset && userLastLogin && userLastLogin < lastReset) {
+              logger.log(
+                "User account was deleted in reset. Forcing re-authentication."
+              );
+              await signOut(auth);
+              setUser(null);
+              setIsAdmin(false);
+              setAuthLoading(false);
+              return;
+            }
+
+            setUser({
+              uid: fbUser.uid,
+              email: fbUser.email,
+              displayName: fbUser.displayName || userData.displayName || "",
+              role: userData.role || "user",
+              lastLogin: new Date(),
+            });
+            setIsAdmin(
+              userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
+            );
+          } else {
+            // User document doesn't exist - create new user document
+            // This handles both new registrations and post-reset logins
+            logger.log(
+              "User document not found. Creating new user document..."
+            );
+            const newUser = {
+              uid: fbUser.uid,
+              email: fbUser.email,
+              displayName: fbUser.displayName || "",
+              role: ADMIN_EMAILS.includes(fbUser.email) ? "admin" : "user",
+              createdAt: new Date(),
+              lastLogin: new Date(),
+            };
+            await setDoc(userRef, newUser);
+            setUser(newUser);
+            setIsAdmin(ADMIN_EMAILS.includes(fbUser.email));
+          }
+        } catch (error) {
+          logger.error("Error loading user data:", error);
+          // If there's an error, sign out the user
+          await signOut(auth);
+          setUser(null);
+          setIsAdmin(false);
         }
       } else {
         setUser(null);
@@ -71,6 +105,32 @@ export const AppProvider = ({ children }) => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Listen to user document to detect deletion (for immediate logout during reset)
+  useEffect(() => {
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(
+      userRef,
+      async (snapshot) => {
+        if (!snapshot.exists()) {
+          // User document was deleted - force logout immediately
+          logger.log(
+            "User document deleted (contest reset detected). Forcing logout..."
+          );
+          await signOut(auth);
+          setUser(null);
+          setIsAdmin(false);
+        }
+      },
+      (error) => {
+        logger.error("Error listening to user document:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
 
   // Listen to app settings
   useEffect(() => {
