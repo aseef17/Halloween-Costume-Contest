@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
             lastLogin: new Date(),
           });
           setIsAdmin(
-            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email)
+            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
           );
         } else {
           // Create new user profile
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       authLoading,
       isAdmin,
     }),
-    [user, authLoading, isAdmin]
+    [user, authLoading, isAdmin],
   );
 
   return (
