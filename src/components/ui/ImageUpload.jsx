@@ -186,9 +186,6 @@ const ImageUpload = ({
                   <p className="text-orange-300 font-medium mb-2">
                     Upload Costume Image
                   </p>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Drag & drop an image or use options below
-                  </p>
 
                   {/* Action buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">

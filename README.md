@@ -1,314 +1,336 @@
-# 🎃 Halloween Costume Contest App
+# Halloween Costume Contest
 
-A spooktacular web application for hosting Halloween costume contests with real-time voting, admin controls, and beautiful animations. Built with React, Firebase, and modern web technologies.
+A real-time web application for hosting Halloween costume contests with voting, live results, and comprehensive admin controls.
 
-![Halloween Costume Contest](https://img.shields.io/badge/Halloween-Contest-orange?style=for-the-badge&logo=halloween)
-![React](https://img.shields.io/badge/React-18+-blue?style=for-the-badge&logo=react)
-![Firebase](https://img.shields.io/badge/Firebase-Real--time-orange?style=for-the-badge&logo=firebase)
-![Vite](https://img.shields.io/badge/Vite-Fast%20Build-purple?style=for-the-badge&logo=vite)
+## Features
 
-## ✨ Features
+### User Features
+- **Authentication**: Secure email/password and Google sign-in via Firebase Auth
+- **Costume Submission**: Upload costume images with optional descriptions
+  - Camera capture support for mobile devices
+  - Gallery selection for existing photos
+- **Real-time Voting**: Vote for favorite costumes when voting is enabled
+  - Change votes before voting closes
+  - Visual feedback for current vote selection
+- **Live Results**: View rankings and vote counts when results are visible
+  - Automatic tie detection with "(Tied)" indicator
+  - Trophy indicators for top 3 positions
 
-### 🎭 **Costume Management**
+### Admin Features
+- **Quick Admin Controls**: Convenient panel on Dashboard for common actions
+  - Toggle voting on/off
+  - Toggle results visibility
+  - Start/end revote for ties
+  - Link to full admin panel
+- **Full Admin Panel**:
+  - View all submissions with costume details
+  - Monitor vote counts and participation
+  - Enable/disable self-voting
+  - Manage contest state (active/inactive)
+- **Tie Resolution**: Automatic revote system for first-place ties
+  - Clears existing votes
+  - Restricts voting to only tied costumes
+  - Maintains fair voting process
+- **Contest Reset**: One-click reset functionality
+  - Deletes all costumes, votes, and user data
+  - Clears Firebase Storage images
+  - Resets app settings to defaults
+  - Automatically logs out all active users when reset occurs
 
-- **Submit Costumes** - Upload images with descriptions
-- **Real-time Updates** - See new submissions instantly
-- **Image Upload** - Drag & drop or click to upload
-- **Costume Editing** - Edit your own submissions
+## Tech Stack
 
-### 🗳️ **Voting System**
+- **Frontend**: React 19 with hooks and context-based state management
+- **Build Tool**: Vite with Rolldown bundler
+- **Styling**: Tailwind CSS v4 with custom design system
+- **Animations**: Motion (Framer Motion) for smooth transitions
+- **Backend**: Firebase
+  - Authentication (Email/Password + Google OAuth)
+  - Firestore (real-time database)
+  - Storage (image hosting)
+- **UI Components**: Radix UI primitives with custom styling
+- **Notifications**: Sonner toast library
 
-- **Real-time Voting** - Vote for your favorite costumes
-- **Vote Tracking** - See who voted for what
-- **Self-vote Control** - Admin can enable/disable self-voting
-- **Vote Count Display** - Live vote counts and rankings
+## Prerequisites
 
-### 👑 **Admin Controls**
+- Node.js 18+ and npm
+- Firebase project with Authentication, Firestore, and Storage enabled
 
-- **Voting Toggle** - Enable/disable voting system
-- **Results Visibility** - Show/hide contest results
-- **Self-vote Settings** - Control self-voting permissions
-- **Contest Reset** - Reset entire contest data
-- **User Management** - View contest statistics
-
-### 🎨 **User Experience**
-
-- **Responsive Design** - Works on all devices
-- **Dark Theme** - Spooky Halloween aesthetic
-- **Smooth Animations** - Framer Motion animations
-- **Loading States** - Beautiful skeleton loaders
-- **Error Handling** - Graceful error management
-- **Accessibility** - WCAG compliant
-
-### 🔐 **Authentication**
-
-- **Firebase Auth** - Secure user authentication
-- **User Profiles** - Display names and roles
-- **Admin Roles** - Special admin privileges
-- **Session Management** - Persistent login
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Firebase project
-
-### Installation
+## Setup
 
 1. **Clone the repository**
-
    ```bash
-   git clone <repository-url>
-   cd halloween-costume-contest
-   ```
-
-2. **Install dependencies**
-
-   ```bash
+   cd my-app
    npm install
    ```
 
-3. **Set up Firebase**
-   - Create a Firebase project
-   - Enable Authentication (Email/Password)
-   - Enable Firestore Database
-   - Copy your Firebase config
+2. **Configure Firebase**
 
-4. **Configure environment**
+   Create two environment files in the root directory:
 
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your Firebase configuration and admin emails
+   **`.env.development`** (for local development):
+   ```env
+   VITE_FIREBASE_API_KEY=your_dev_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_dev_auth_domain
+   VITE_FIREBASE_PROJECT_ID=your_dev_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_dev_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_dev_sender_id
+   VITE_FIREBASE_APP_ID=your_dev_app_id
+   VITE_ADMIN_EMAILS=admin1@example.com,admin2@example.com
    ```
 
-5. **Start development server**
-
-   ```bash
-   npm run dev
+   **`.env.production`** (for production builds):
+   ```env
+   VITE_FIREBASE_API_KEY=your_prod_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_prod_auth_domain
+   VITE_FIREBASE_PROJECT_ID=your_prod_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_prod_storage_bucket
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_prod_sender_id
+   VITE_FIREBASE_APP_ID=your_prod_app_id
+   VITE_ADMIN_EMAILS=admin1@example.com,admin2@example.com
    ```
 
-6. **Open your browser**
-   ```
-   http://localhost:5173
+3. **Firebase Security Rules**
+
+   Configure Firestore rules to allow authenticated users to read/write:
+   ```javascript
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       match /{document=**} {
+         allow read, write: if request.auth != null;
+       }
+     }
+   }
    ```
 
-## 🏗️ Project Structure
+   Configure Storage rules:
+   ```javascript
+   rules_version = '2';
+   service firebase.storage {
+     match /b/{bucket}/o {
+       match /costume-images/{imageId} {
+         allow read: if request.auth != null;
+         allow write: if request.auth != null;
+         allow delete: if request.auth != null;
+       }
+     }
+   }
+   ```
+
+## Development
+
+```bash
+# Start development server (uses .env.development)
+npm run dev
+
+# Start development server with production config
+npm run dev:prod
+
+# Lint code
+npm run lint
+
+# Auto-fix linting issues
+npm run lint:fix
+```
+
+Development server runs at `http://localhost:5173`
+
+## Production Build
+
+```bash
+# Build for production (uses .env.production)
+npm run build:prod
+
+# Build for development
+npm run build:dev
+
+# Preview production build
+npm run preview:prod
+```
+
+## Environment Variable Priority
+
+The application uses a clear hierarchy for environment configuration:
+
+1. **`.env.development`** - Used during `npm run dev`
+2. **`.env.production`** - Used during `npm run build:prod`
+3. Mode-specific commands override the default Vite behavior
+
+## Admin Access
+
+Admin privileges are granted in two ways:
+
+1. **Email-based**: Users whose email matches any entry in `VITE_ADMIN_EMAILS`
+2. **Role-based**: Users with `role: "admin"` in their Firestore document
+
+New users are automatically assigned admin role if their email is in the admin list.
+
+## Application Workflow
+
+### Contest Setup (Admin)
+1. Admin enables costume submissions (default: enabled)
+2. Users submit costumes with images and descriptions
+3. Admin monitors submissions via admin panel
+
+### Voting Phase (Admin)
+1. Admin clicks "Open Voting" when ready
+2. Users can vote for their favorite costume
+3. Users can change their vote before voting closes
+4. Admin monitors vote counts in real-time
+
+### Results Phase (Admin)
+1. Admin clicks "Close Voting" to stop accepting votes
+2. Admin clicks "Show Results" to reveal rankings
+3. If first place has a tie, admin can initiate a revote:
+   - Clears all existing votes
+   - Users vote only among tied costumes
+   - Process repeats until tie is broken or admin ends revote
+
+### Contest Reset (Admin)
+1. Admin clicks "Reset Contest" with confirmation
+2. System performs complete cleanup:
+   - Deletes all costumes and votes
+   - Removes all images from storage
+   - Deletes all user documents
+   - Resets app settings
+   - Logs out all active users immediately
+3. Fresh contest ready for next event
+
+## Technical Highlights
+
+### Real-time Synchronization
+Uses Firestore `onSnapshot` listeners for instant updates across all clients. All users see vote counts and rankings update live without manual refresh.
+
+### Automatic Logout on Reset
+When an admin resets the contest, all logged-in users are immediately signed out via a real-time listener on their Firestore user document. When the document is deleted during reset, the listener fires and triggers `signOut()`, preventing orphaned authentication states.
+
+**Implementation** (AppContext.jsx:119-143):
+```javascript
+useEffect(() => {
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+  const unsubscribe = onSnapshot(userRef, async (snapshot) => {
+    if (!snapshot.exists()) {
+      // User document deleted - force immediate logout
+      await signOut(auth);
+    }
+  });
+
+  return () => unsubscribe();
+}, [user]);
+```
+
+### Performance Optimizations
+- `useMemo` for expensive calculations (vote counting, rankings)
+- Efficient vote count map using O(1) lookups instead of O(n) filtering
+- Memoized context values to prevent unnecessary re-renders
+- Lazy-loaded admin services to reduce initial bundle size
+
+### Tie Detection Algorithm
+The ranking system detects ties by comparing vote counts:
+- Costumes with equal votes receive the same rank
+- Next rank skips positions (e.g., if two tied at #1, next is #3)
+- Displays "(Tied)" indicator for all tied positions
+- Enables revote functionality for first-place ties only
+
+### Environment-Aware Logging
+Custom logger utility (`src/utils/logger.js`) silences debug logs in production:
+- `logger.log()`, `logger.warn()`, `logger.info()` only output in development mode
+- `logger.error()` always outputs for debugging purposes
+- Improves production performance and reduces console noise
+
+### Image Upload
+- Supports both camera capture and gallery selection
+- Mobile devices can use native camera via HTML5 `capture="environment"` attribute
+- Images stored in Firebase Storage under `costume-images/` path
+- Automatic cleanup during contest reset
+
+## Project Structure
 
 ```
 src/
-├── components/           # React components
-│   ├── features/        # Feature-specific components
-│   │   ├── Admin.jsx    # Admin dashboard
-│   │   ├── Dashboard.jsx # Main user dashboard
-│   │   ├── CostumeCard.jsx # Costume display card
-│   │   └── ...
-│   ├── ui/              # Reusable UI components
-│   │   ├── Button.jsx   # Custom button component
-│   │   ├── Input.jsx    # Form input component
-│   │   └── ...
-│   └── layout/          # Layout components
-├── contexts/            # React contexts
-│   ├── AuthContext.jsx  # Authentication context
-│   ├── CostumeContext.jsx # Costume data context
-│   └── AppSettingsContext.jsx # App settings context
+├── components/
+│   ├── features/         # Main feature components (Dashboard, Admin, etc.)
+│   ├── layout/          # Layout components (Header, Footer)
+│   └── ui/              # Reusable UI components (Button, Card, etc.)
 ├── hooks/               # Custom React hooks
-│   ├── useAuth.js       # Authentication hooks
-│   ├── useCommon.js     # Common utility hooks
-│   └── useAsyncOperations.js # Async operation hooks
-├── services/            # API services
-│   ├── CostumeService.js # Costume CRUD operations
-│   └── AdminService.js  # Admin operations
+│   ├── useAuth.js       # Authentication hook
+│   ├── useAsyncOperations.js # Async operation handlers
+│   └── useImageUpload.js # Image upload logic
+├── services/            # Firebase service modules
+│   ├── AdminService.js  # Admin operations (reset, revote, settings)
+│   └── CostumeService.js # Costume CRUD operations
 ├── utils/               # Utility functions
-│   ├── responsive.js    # Responsive design utilities
-│   ├── accessibility.js # Accessibility helpers
-│   └── animations.js    # Animation utilities
-└── assets/              # Static assets
-    ├── images/          # Image files
-    └── icons/           # Icon files
+│   ├── logger.js        # Environment-aware logging
+│   ├── toastUtils.js    # Toast notification helpers
+│   └── index.js         # Common utilities
+├── AppContext.jsx       # Global state management
+├── firebaseConfig.js    # Firebase initialization
+└── App.jsx             # Root component
 ```
 
-## 🔧 Configuration
+## Firestore Collections
 
-### Firebase Setup
-
-1. **Authentication**
-   - Enable Email/Password authentication
-   - Set up admin users in Firestore
-
-2. **Firestore Database**
-   - Create collections: `costumes`, `votes`, `users`, `settings`
-   - Set up security rules
-
-3. **Storage**
-   - Enable Firebase Storage for costume images
-   - Configure storage rules
-
-4. **Firebase Configuration Files**
-   ```bash
-   cp firebase.json.example firebase.json
-   cp .firebaserc.example .firebaserc
-   # Update the project ID in .firebaserc
-   ```
-
-### Environment Variables
-
-```env
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your_project-default-rtdb.firebaseio.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-
-# Admin Configuration
-VITE_ADMIN_EMAILS=admin1@example.com,admin2@example.com
-
-# App Configuration
-VITE_APP_ENV=development
-VITE_APP_NAME=Halloween Costume Contest
+### `users`
+```javascript
+{
+  uid: string,
+  email: string,
+  displayName: string,
+  role: "admin" | "user",
+  createdAt: Timestamp,
+  lastLogin: Timestamp
+}
 ```
 
-### Admin Configuration
-
-The app uses environment variables to configure admin users. Set the `VITE_ADMIN_EMAILS` variable with a comma-separated list of admin email addresses:
-
-```env
-VITE_ADMIN_EMAILS=admin1@example.com,admin2@example.com,admin3@example.com
+### `costumes`
+```javascript
+{
+  userId: string,
+  userName: string,
+  imageUrl: string,
+  description: string,
+  submittedAt: Timestamp,
+  updatedAt: Timestamp
+}
 ```
 
-**Note:** If no admin emails are set in the environment variables, no admin users will be available. Make sure to set your own admin emails in production!
-
-### Environment Files
-
-The app supports multiple environment files for different deployment scenarios:
-
-- **`.env.local`** - Local development (ignored by git)
-- **`.env.development`** - Development-specific settings
-- **`.env.production.example`** - Production template
-- **`.env.example`** - General template
-
-**Priority order:** `.env.local` > `.env.development` > `.env.production` > `.env`
-
-## 📱 Usage
-
-### For Contest Participants
-
-1. **Register/Login** - Create an account or sign in
-2. **Submit Costume** - Upload your Halloween costume photo
-3. **Vote** - Vote for your favorite costumes (when enabled)
-4. **View Results** - See contest results (when revealed)
-
-### For Administrators
-
-1. **Access Admin Panel** - Click "Admin Panel" button
-2. **Control Voting** - Enable/disable voting system
-3. **Manage Results** - Show/hide contest results
-4. **Reset Contest** - Clear all data for new contest
-5. **Monitor Activity** - View contest statistics
-
-## 🎨 Customization
-
-### Themes
-
-- Modify `src/index.css` for color schemes
-- Update Halloween icons in `src/assets/`
-- Customize animations in `src/utils/animations.js`
-
-### Features
-
-- Add new costume categories
-- Implement different voting systems
-- Add costume rating system
-- Create costume galleries
-
-## 🚀 Deployment
-
-### Build for Production
-
-```bash
-npm run build
+### `votes`
+```javascript
+{
+  voterId: string,
+  costumeId: string,
+  timestamp: Timestamp
+}
 ```
 
-### Deploy to Firebase Hosting
-
-```bash
-npm install -g firebase-tools
-firebase login
-# Make sure firebase.json and .firebaserc are configured
-firebase deploy
+### `appSettings`
+```javascript
+{
+  votingEnabled: boolean,
+  resultsVisible: boolean,
+  contestActive: boolean,
+  allowSelfVote: boolean,
+  revoteMode: boolean,
+  revoteCostumeIds: string[],
+  lastReset: Timestamp,
+  lastUpdated: Timestamp
+}
 ```
 
-### Deploy to Vercel
+## State Management
 
-```bash
-npm install -g vercel
-vercel --prod
-```
+The application uses React Context for global state management via `AppContext.jsx`:
 
-### Deploy to Netlify
+- **Authentication State**: User data, admin status, loading states
+- **Costume Data**: All costumes with real-time updates
+- **Vote Data**: All votes with real-time updates
+- **App Settings**: Contest configuration (voting enabled, results visible, etc.)
+- **Computed Values**: Rankings, tie detection, vote counts (memoized)
 
-```bash
-npm run build
-# Upload dist/ folder to Netlify
-```
+All data syncs in real-time using Firestore `onSnapshot` listeners.
 
-## 🧪 Development
+## License
 
-### Available Scripts
-
-- `npm run dev` - Start development server (development mode)
-- `npm run dev:prod` - Start development server (production mode)
-- `npm run build` - Build for production
-- `npm run build:dev` - Build for development
-- `npm run build:prod` - Build for production
-- `npm run preview` - Preview production build
-- `npm run preview:prod` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint errors
-
-### Code Quality
-
-- ESLint configuration for code quality
-- Prettier for code formatting
-- Custom hooks for reusable logic
-- Context providers for state management
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🎃 Halloween Fun
-
-This app was built with love for Halloween enthusiasts! Perfect for:
-
-- 🏠 **House parties** - Host costume contests at home
-- 🏢 **Office events** - Company Halloween celebrations
-- 🎓 **School events** - Student costume competitions
-- 🎪 **Community events** - Neighborhood Halloween contests
-
-## 🆘 Support
-
-If you encounter any issues or have questions:
-
-- Check the [Issues](https://github.com/your-repo/issues) page
-- Create a new issue with detailed information
-- Contact the development team
-
----
-
-**Happy Halloween! 🎃👻🦇**
-
-Built with ❤️ for the Halloween community
+MIT
