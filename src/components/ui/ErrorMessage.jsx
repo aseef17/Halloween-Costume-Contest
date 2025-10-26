@@ -51,7 +51,7 @@ const ErrorMessage = ({
         "relative p-4 rounded-xl border backdrop-blur-sm",
         "shadow-lg shadow-black/20",
         getVariantStyles(),
-        className
+        className,
       )}
       {...props}
     >
@@ -87,7 +87,7 @@ const ErrorMessage = ({
             className={cn(
               "flex-shrink-0 p-1 rounded-full transition-colors",
               "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20",
-              getIconColor()
+              getIconColor(),
             )}
           >
             <X className="w-4 h-4" />
@@ -105,7 +105,7 @@ const ErrorMessage = ({
           variant === "error" && "bg-red-500",
           variant === "warning" && "bg-yellow-500",
           variant === "success" && "bg-green-500",
-          variant === "info" && "bg-blue-500"
+          variant === "info" && "bg-blue-500",
         )}
       />
     </motion.div>

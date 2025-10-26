@@ -1,6 +1,12 @@
 import Lottie from "lottie-react";
 
-const LottieAnimation = ({ animationData, loop = true, autoplay = true, className, ...props }) => {
+const LottieAnimation = ({
+  animationData,
+  loop = true,
+  autoplay = true,
+  className,
+  ...props
+}) => {
   return (
     <Lottie
       animationData={animationData}

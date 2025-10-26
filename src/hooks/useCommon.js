@@ -36,7 +36,7 @@ export const useForm = (initialValues = {}) => {
         setErrors((prev) => ({ ...prev, [name]: null }));
       }
     },
-    [errors]
+    [errors],
   );
 
   const setError = useCallback((name, error) => {
@@ -81,7 +81,7 @@ export const useForm = (initialValues = {}) => {
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
-    [values]
+    [values],
   );
 
   return {
@@ -122,7 +122,7 @@ export const useLocalStorage = (key, initialValue) => {
         console.error(`Error setting localStorage key "${key}":`, error);
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   const removeValue = useCallback(() => {
@@ -211,14 +211,14 @@ export const useCostumeVoting = () => {
         return false;
       return true;
     },
-    [appSettings.votingEnabled, appSettings.allowSelfVote, user]
+    [appSettings.votingEnabled, appSettings.allowSelfVote, user],
   );
 
   const hasVoted = useCallback(
     (costumeId) => {
       return currentUserVote && currentUserVote.costumeId === costumeId;
     },
-    [currentUserVote]
+    [currentUserVote],
   );
 
   const handleVote = useCallback(
@@ -232,7 +232,7 @@ export const useCostumeVoting = () => {
         throw error;
       }
     },
-    [canVote, user, voteForCostume]
+    [canVote, user, voteForCostume],
   );
 
   return {
@@ -258,7 +258,7 @@ export const useCostumeFiltering = (costumes) => {
       filtered = filtered.filter(
         (costume) =>
           costume.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          costume.description.toLowerCase().includes(searchTerm.toLowerCase())
+          costume.description.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -284,17 +284,17 @@ export const useCostumeFiltering = (costumes) => {
   const userCostumes = useMemo(
     () =>
       filteredAndSortedCostumes.filter(
-        (costume) => costume.userId === user?.uid
+        (costume) => costume.userId === user?.uid,
       ),
-    [filteredAndSortedCostumes, user?.uid]
+    [filteredAndSortedCostumes, user?.uid],
   );
 
   const otherCostumes = useMemo(
     () =>
       filteredAndSortedCostumes.filter(
-        (costume) => costume.userId !== user?.uid
+        (costume) => costume.userId !== user?.uid,
       ),
-    [filteredAndSortedCostumes, user?.uid]
+    [filteredAndSortedCostumes, user?.uid],
   );
 
   return {

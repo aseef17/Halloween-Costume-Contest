@@ -62,7 +62,7 @@ const AuthRouter = () => {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
 
       // Update profile with displayName
@@ -97,17 +97,17 @@ const AuthRouter = () => {
       // Handle specific error cases with toast notifications
       if (error.code === "auth/popup-closed-by-user") {
         halloweenToast.error(
-          "Login Cancelled - You closed the Google sign-in popup. Please try again."
+          "Login Cancelled - You closed the Google sign-in popup. Please try again.",
         );
       } else if (error.code === "auth/cancelled-popup-request") {
         halloweenToast.info("Login Cancelled - Please try again.");
       } else if (error.code === "auth/popup-blocked") {
         halloweenToast.error(
-          "Popup Blocked - Please allow popups for this site and try again."
+          "Popup Blocked - Please allow popups for this site and try again.",
         );
       } else {
         halloweenToast.error(
-          "Sign-in Failed - Google sign-in failed. Please try again."
+          "Sign-in Failed - Google sign-in failed. Please try again.",
         );
         setError("Google sign-in failed. Please try again.");
       }

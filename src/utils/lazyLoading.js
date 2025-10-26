@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
  */
 export const withLazyLoading = (Component, fallback = null) => {
   const LazyComponent = lazy(() => Component);
-  
+
   return (props) => (
     <Suspense fallback={fallback || <DefaultFallback />}>
       <LazyComponent {...props} />
@@ -44,37 +44,37 @@ const DefaultFallback = () => (
  */
 export const LazyDashboard = withLazyLoading(
   () => import("../components/features/Dashboard"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 export const LazyAdmin = withLazyLoading(
   () => import("../components/features/Admin"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 export const LazyLogin = withLazyLoading(
   () => import("../components/features/Login"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 export const LazyRegister = withLazyLoading(
   () => import("../components/features/Register"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 export const LazyCostumeForm = withLazyLoading(
   () => import("../components/features/CostumeForm"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 export const LazyResultsSection = withLazyLoading(
   () => import("../components/features/ResultsSection"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 export const LazyVotingSection = withLazyLoading(
   () => import("../components/features/VotingSection"),
-  <DefaultFallback />
+  <DefaultFallback />,
 );
 
 /**
@@ -82,7 +82,7 @@ export const LazyVotingSection = withLazyLoading(
  */
 export const LazyLottie = ({ animationData, ...props }) => {
   const LottieComponent = lazy(() => import("lottie-react"));
-  
+
   return (
     <Suspense fallback={<div className="animate-pulse bg-gray-800 rounded" />}>
       <LottieComponent animationData={animationData} {...props} />

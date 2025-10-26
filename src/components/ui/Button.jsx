@@ -40,7 +40,7 @@ const buttonVariants = cva(
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 // Spooky animation variants for different button types
@@ -190,7 +190,7 @@ const Button = React.forwardRef(
       showLottie = false,
       ...props
     },
-    ref
+    ref,
   ) => {
     const animationProps = animation
       ? getAnimationProps(animation, variant)
@@ -229,7 +229,7 @@ const Button = React.forwardRef(
         </span>
       </motion.button>
     );
-  }
+  },
 );
 Button.displayName = "Button";
 

@@ -5,7 +5,7 @@ import { cn } from "../../utils";
 const Switch = React.forwardRef(
   (
     { className, checked = false, onCheckedChange, disabled = false, ...props },
-    ref
+    ref,
   ) => {
     return (
       <button
@@ -21,7 +21,7 @@ const Switch = React.forwardRef(
           checked
             ? "bg-gradient-to-r from-orange-500 to-orange-600"
             : "bg-gray-600",
-          className
+          className,
         )}
         onClick={() => onCheckedChange?.(!checked)}
         ref={ref}
@@ -29,7 +29,7 @@ const Switch = React.forwardRef(
       >
         <motion.span
           className={cn(
-            "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform"
+            "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform",
           )}
           animate={{
             x: checked ? 20 : 0,
@@ -42,7 +42,7 @@ const Switch = React.forwardRef(
         />
       </button>
     );
-  }
+  },
 );
 Switch.displayName = "Switch";
 

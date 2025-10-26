@@ -78,7 +78,7 @@ const Toast = ({ toast, onRemove }) => {
         "bg-gradient-to-r",
         colorScheme.bg,
         colorScheme.border,
-        "max-w-sm w-full"
+        "max-w-sm w-full",
       )}
       role="alert"
       aria-live="polite"
@@ -140,7 +140,7 @@ const Toast = ({ toast, onRemove }) => {
                   className={cn(
                     "text-xs font-medium px-3 py-1.5 rounded-lg transition-colors",
                     "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20",
-                    colorScheme.title
+                    colorScheme.title,
                   )}
                 >
                   {action.label}
@@ -158,7 +158,7 @@ const Toast = ({ toast, onRemove }) => {
             className={cn(
               "flex-shrink-0 p-1 rounded-lg transition-colors",
               "hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20",
-              "text-gray-400 hover:text-gray-300"
+              "text-gray-400 hover:text-gray-300",
             )}
             aria-label="Close notification"
           >

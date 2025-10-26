@@ -51,22 +51,34 @@ export const costumeToasts = {
   submitted: () => halloweenToast.success("Costume submitted successfully! 🎃"),
   updated: () => halloweenToast.success("Costume updated! ✨"),
   deleted: () => halloweenToast.success("Costume deleted! 🗑️"),
-  voteCast: () => halloweenToast.success("Vote cast! Your choice has been recorded 🗳️"),
+  voteCast: () =>
+    halloweenToast.success("Vote cast! Your choice has been recorded 🗳️"),
   voteChanged: () => halloweenToast.info("Vote changed! 🔄"),
-  alreadyExists: () => halloweenToast.error("You already have a costume! Edit or delete it first 👻"),
-  uploadSuccess: () => halloweenToast.success("Image uploaded successfully! 📸"),
-  uploadError: () => halloweenToast.error("Failed to upload image. Please try again 👻"),
+  alreadyExists: () =>
+    halloweenToast.error(
+      "You already have a costume! Edit or delete it first 👻",
+    ),
+  uploadSuccess: () =>
+    halloweenToast.success("Image uploaded successfully! 📸"),
+  uploadError: () =>
+    halloweenToast.error("Failed to upload image. Please try again 👻"),
 };
 
 export const adminToasts = {
-  votingEnabled: () => halloweenToast.success("Voting is now enabled! Let the games begin! 🎮"),
+  votingEnabled: () =>
+    halloweenToast.success("Voting is now enabled! Let the games begin! 🎮"),
   votingDisabled: () => halloweenToast.info("Voting has been disabled 🛑"),
   resultsShown: () => halloweenToast.success("Results are now visible! 🏆"),
   resultsHidden: () => halloweenToast.info("Results are now hidden 👻"),
-  selfVoteEnabled: () => halloweenToast.success("Self-voting is now enabled! 🎯"),
+  selfVoteEnabled: () =>
+    halloweenToast.success("Self-voting is now enabled! 🎯"),
   selfVoteDisabled: () => halloweenToast.info("Self-voting is now disabled 🚫"),
-  contestReset: () => halloweenToast.success("Contest has been reset! Fresh start! 🔄"),
-  resetError: () => halloweenToast.error("Failed to reset contest. Please try again 👻"),
+  contestReset: () =>
+    halloweenToast.success("Contest has been reset! Fresh start! 🔄"),
+  resetError: () =>
+    halloweenToast.error("Failed to reset contest. Please try again 👻"),
+  revoteError: () =>
+    halloweenToast.error("Failed to manage revote. Please try again 👻"),
 };
 
 export const authToasts = {
@@ -77,21 +89,30 @@ export const authToasts = {
       "auth/user-not-found": "No account found with this email 🕵️",
       "auth/wrong-password": "Incorrect password 🔐",
       "auth/too-many-requests": "Too many attempts. Please try again later ⏰",
-      "auth/network-request-failed": "Network error. Please check your connection 🌐",
+      "auth/network-request-failed":
+        "Network error. Please check your connection 🌐",
     };
-    return halloweenToast.error(messages[error.code] || "Login failed. Please try again 👻");
+    return halloweenToast.error(
+      messages[error.code] || "Login failed. Please try again 👻",
+    );
   },
-  registerSuccess: () => halloweenToast.success("Account created! Welcome to the contest! 🎉"),
+  registerSuccess: () =>
+    halloweenToast.success("Account created! Welcome to the contest! 🎉"),
   registerError: (error) => {
     const messages = {
       "auth/email-already-in-use": "Email already in use 📧",
       "auth/invalid-email": "Invalid email format 👻",
-      "auth/weak-password": "Password is too weak. Use at least 6 characters 🔐",
-      "auth/network-request-failed": "Network error. Please check your connection 🌐",
+      "auth/weak-password":
+        "Password is too weak. Use at least 6 characters 🔐",
+      "auth/network-request-failed":
+        "Network error. Please check your connection 🌐",
     };
-    return halloweenToast.error(messages[error.code] || "Registration failed. Please try again 👻");
+    return halloweenToast.error(
+      messages[error.code] || "Registration failed. Please try again 👻",
+    );
   },
-  logoutSuccess: () => halloweenToast.info("Logged out successfully! See you next time! 👋"),
+  logoutSuccess: () =>
+    halloweenToast.info("Logged out successfully! See you next time! 👋"),
 };
 
 /**
@@ -135,6 +156,30 @@ export const promiseToast = {
       loading: "Uploading image... 📸",
       success: "Image uploaded! Looking spooky! 👻",
       error: "Failed to upload image. Try again! 👻",
+    });
+  },
+
+  contestReset: (promise) => {
+    return toast.promise(promise, {
+      loading: "Resetting contest... 🔄",
+      success: "Contest reset! Fresh start! 🎃",
+      error: "Failed to reset contest. The spirits won't let go! 👻",
+    });
+  },
+
+  revoteStart: (promise) => {
+    return toast.promise(promise, {
+      loading: "Starting revote... 🔄",
+      success: "Revote started! Users can now vote for the tied costumes! 🏆",
+      error: "Failed to start revote. Try again! 👻",
+    });
+  },
+
+  revoteEnd: (promise) => {
+    return toast.promise(promise, {
+      loading: "Ending revote... ✅",
+      success: "Revote ended! Check the results! 🎉",
+      error: "Failed to end revote. Try again! 👻",
     });
   },
 };

@@ -21,10 +21,10 @@ const WinnerAnnouncement = ({ winner, rank, onClose }) => {
     rank === 1
       ? "GRAND WINNER!"
       : rank === 2
-      ? "AWESOME 2ND PLACE!"
-      : rank === 3
-      ? "EXCELLENT 3RD PLACE!"
-      : "HONORABLE MENTION!";
+        ? "AWESOME 2ND PLACE!"
+        : rank === 3
+          ? "EXCELLENT 3RD PLACE!"
+          : "HONORABLE MENTION!";
 
   // Message for the winner
   const message = isCurrentUserWin
@@ -38,10 +38,10 @@ const WinnerAnnouncement = ({ winner, rank, onClose }) => {
     rank === 1
       ? "from-yellow-500 via-orange-500 to-red-500"
       : rank === 2
-      ? "from-gray-300 via-gray-400 to-gray-500"
-      : rank === 3
-      ? "from-amber-700 via-amber-600 to-amber-800"
-      : "from-purple-600 to-indigo-700";
+        ? "from-gray-300 via-gray-400 to-gray-500"
+        : rank === 3
+          ? "from-amber-700 via-amber-600 to-amber-800"
+          : "from-purple-600 to-indigo-700";
 
   // Disable confetti after a while
   useEffect(() => {

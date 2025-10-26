@@ -30,7 +30,7 @@ const Input = React.forwardRef(
             "hover:border-opacity-60",
             getVariantStyles(),
             error && "animate-pulse",
-            className
+            className,
           )}
           whileFocus={{ scale: 1.02 }}
           transition={{ duration: 0.2 }}
@@ -49,7 +49,7 @@ const Input = React.forwardRef(
         )}
       </div>
     );
-  }
+  },
 );
 Input.displayName = "Input";
 

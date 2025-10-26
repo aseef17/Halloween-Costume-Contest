@@ -11,7 +11,7 @@ import {
 // Validate Firebase configuration
 if (!validateFirebaseConfig()) {
   throw new Error(
-    "Firebase configuration is incomplete. Please check your environment variables."
+    "Firebase configuration is incomplete. Please check your environment variables.",
   );
 }
 

@@ -14,19 +14,19 @@ export const CostumeCardSkeleton = () => (
     <div className="animate-pulse mb-4">
       <div className="w-full h-48 bg-gray-700 rounded-lg mb-4"></div>
     </div>
-    
+
     {/* Title skeleton */}
     <div className="animate-pulse mb-3">
       <div className="h-6 bg-gray-700 rounded w-3/4 mb-2"></div>
       <div className="h-4 bg-gray-700 rounded w-1/2"></div>
     </div>
-    
+
     {/* Description skeleton */}
     <div className="animate-pulse mb-4">
       <div className="h-3 bg-gray-700 rounded w-full mb-2"></div>
       <div className="h-3 bg-gray-700 rounded w-5/6"></div>
     </div>
-    
+
     {/* Button skeleton */}
     <div className="animate-pulse">
       <div className="h-10 bg-gray-700 rounded-lg w-full"></div>
@@ -64,7 +64,7 @@ export const VotingSectionSkeleton = () => (
     <div className="animate-pulse">
       <div className="h-8 bg-gray-700 rounded w-1/3 mb-6"></div>
     </div>
-    
+
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <CostumeCardSkeleton key={i} />
@@ -81,7 +81,7 @@ export const ResultsSectionSkeleton = () => (
     <div className="animate-pulse">
       <div className="h-8 bg-gray-700 rounded w-1/4 mb-6"></div>
     </div>
-    
+
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
         <motion.div
@@ -108,13 +108,13 @@ export const ResultsSectionSkeleton = () => (
 /**
  * Generic skeleton loader
  */
-export const Skeleton = ({ 
-  className = "", 
-  width = "w-full", 
+export const Skeleton = ({
+  className = "",
+  width = "w-full",
   height = "h-4",
-  rounded = "rounded" 
+  rounded = "rounded",
 }) => (
-  <div 
+  <div
     className={`animate-pulse bg-gray-700 ${width} ${height} ${rounded} ${className}`}
   />
 );

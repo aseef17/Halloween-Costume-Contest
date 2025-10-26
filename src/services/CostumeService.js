@@ -23,7 +23,7 @@ export const CostumeService = {
 
       if (!querySnapshot.empty) {
         throw new Error(
-          "You already have a costume submission. Please edit or delete it first."
+          "You already have a costume submission. Please edit or delete it first.",
         );
       }
 

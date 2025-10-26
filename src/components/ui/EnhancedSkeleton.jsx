@@ -9,7 +9,7 @@ const SkeletonBase = ({ className, ...props }) => (
     className={cn(
       "bg-gradient-to-r from-gray-800/50 via-gray-700/50 to-gray-800/50",
       "animate-pulse rounded-lg relative overflow-hidden",
-      className
+      className,
     )}
     {...animationVariants.fadeIn}
     {...props}
@@ -18,7 +18,7 @@ const SkeletonBase = ({ className, ...props }) => (
     <motion.div
       className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
       animate={{
-        x: ['-100%', '100%'],
+        x: ["-100%", "100%"],
       }}
       transition={{
         duration: 1.5,
@@ -38,27 +38,27 @@ export const CostumeCardSkeleton = () => (
   >
     {/* Glass morphism overlay */}
     <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-    
+
     <div className="p-6 space-y-4">
       {/* Image skeleton */}
       <SkeletonBase className="w-full h-48 sm:h-56 lg:h-64 rounded-lg" />
-      
+
       {/* Title skeleton */}
       <div className="space-y-2">
         <SkeletonBase className="h-6 w-3/4" />
         <SkeletonBase className="h-4 w-1/2" />
       </div>
-      
+
       {/* Description skeleton */}
       <div className="space-y-2">
         <SkeletonBase className="h-4 w-full" />
         <SkeletonBase className="h-4 w-5/6" />
         <SkeletonBase className="h-4 w-2/3" />
       </div>
-      
+
       {/* Vote count skeleton */}
       <SkeletonBase className="h-12 w-full rounded-xl" />
-      
+
       {/* Button skeleton */}
       <SkeletonBase className="h-12 w-full rounded-xl" />
     </div>
@@ -77,7 +77,7 @@ export const VotingSectionSkeleton = () => (
       <SkeletonBase className="h-8 w-1/3" />
       <SkeletonBase className="h-4 w-2/3" />
     </div>
-    
+
     {/* Costume cards skeleton */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {Array.from({ length: 3 }).map((_, index) => (
@@ -100,18 +100,18 @@ export const FormSkeleton = () => (
         <SkeletonBase className="h-4 w-1/4" />
         <SkeletonBase className="h-12 w-full rounded-lg" />
       </div>
-      
+
       <div className="space-y-2">
         <SkeletonBase className="h-4 w-1/3" />
         <SkeletonBase className="h-32 w-full rounded-lg" />
       </div>
-      
+
       <div className="space-y-2">
         <SkeletonBase className="h-4 w-1/5" />
         <SkeletonBase className="h-12 w-full rounded-lg" />
       </div>
     </div>
-    
+
     {/* Button skeleton */}
     <div className="flex gap-3">
       <SkeletonBase className="h-12 w-24 rounded-lg" />
@@ -174,12 +174,15 @@ export const TableSkeleton = ({ rows = 5, columns = 4 }) => (
     transition={{ duration: 0.5 }}
   >
     {/* Header skeleton */}
-    <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+    <div
+      className="grid gap-3"
+      style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+    >
       {Array.from({ length: columns }).map((_, index) => (
         <SkeletonBase key={index} className="h-6 w-full" />
       ))}
     </div>
-    
+
     {/* Rows skeleton */}
     {Array.from({ length: rows }).map((_, rowIndex) => (
       <div

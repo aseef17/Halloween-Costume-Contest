@@ -19,7 +19,7 @@ const CostumeSubmissionModal = ({ isOpen, onClose, costumeName }) => {
       "Mwahahaha! 🎃",
       "May the spookiest costume win! 👻",
     ],
-    []
+    [],
   );
 
   // Reset state when modal opens/closes

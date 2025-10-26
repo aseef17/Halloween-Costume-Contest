@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 /* Import fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-sans: 'Inter', sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Inter", sans-serif;
 
   --color-orange-500: #ff7900;
   --color-orange-600: #e66700;
@@ -93,12 +93,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-orange-500), var(--color-purple-700));
+  background: linear-gradient(
+    180deg,
+    var(--color-orange-500),
+    var(--color-purple-700)
+  );
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--color-orange-600), var(--color-purple-800));
+  background: linear-gradient(
+    180deg,
+    var(--color-orange-600),
+    var(--color-purple-800)
+  );
 }
 
 /* Glow Effects */
@@ -135,7 +143,8 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
   }
 
@@ -149,7 +158,8 @@ body {
 }
 
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
 

@@ -50,13 +50,13 @@ const CostumeForm = ({ costume = null, userId, onSuccess, onCancel }) => {
 
       if (isEdit) {
         await promiseToast.costumeUpdate(
-          updateCostume(costume.id, costumeData)
+          updateCostume(costume.id, costumeData),
         );
         costumeToasts.updated();
         if (onSuccess) onSuccess();
       } else {
         await promiseToast.costumeSubmit(
-          createCostume(costumeData, userId, user?.displayName)
+          createCostume(costumeData, userId, user?.displayName),
         );
         setShowSubmissionModal(true);
       }

@@ -147,7 +147,7 @@ export const useDragAndDrop = (onDrop) => {
         setIsDragOver(false);
       }
     },
-    [dragCounter]
+    [dragCounter],
   );
 
   const handleDragOver = useCallback((e) => {
@@ -167,7 +167,7 @@ export const useDragAndDrop = (onDrop) => {
         onDrop(files[0]); // Only handle the first file
       }
     },
-    [onDrop]
+    [onDrop],
   );
 
   return {

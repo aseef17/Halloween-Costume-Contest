@@ -13,7 +13,7 @@ const HalloweenIcon = ({
   type = "pumpkin",
   size = "md",
   className = "",
-  animate = false
+  animate = false,
 }) => {
   const sizes = {
     sm: "w-6 h-6",
@@ -44,11 +44,7 @@ const HalloweenIcon = ({
   }
 
   return (
-    <img
-      src={iconSrc}
-      alt={type}
-      className={`${sizes[size]} ${className}`}
-    />
+    <img src={iconSrc} alt={type} className={`${sizes[size]} ${className}`} />
   );
 };
 

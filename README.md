@@ -10,18 +10,21 @@ A spooktacular web application for hosting Halloween costume contests with real-
 ## ✨ Features
 
 ### 🎭 **Costume Management**
+
 - **Submit Costumes** - Upload images with descriptions
 - **Real-time Updates** - See new submissions instantly
 - **Image Upload** - Drag & drop or click to upload
 - **Costume Editing** - Edit your own submissions
 
 ### 🗳️ **Voting System**
+
 - **Real-time Voting** - Vote for your favorite costumes
 - **Vote Tracking** - See who voted for what
 - **Self-vote Control** - Admin can enable/disable self-voting
 - **Vote Count Display** - Live vote counts and rankings
 
 ### 👑 **Admin Controls**
+
 - **Voting Toggle** - Enable/disable voting system
 - **Results Visibility** - Show/hide contest results
 - **Self-vote Settings** - Control self-voting permissions
@@ -29,6 +32,7 @@ A spooktacular web application for hosting Halloween costume contests with real-
 - **User Management** - View contest statistics
 
 ### 🎨 **User Experience**
+
 - **Responsive Design** - Works on all devices
 - **Dark Theme** - Spooky Halloween aesthetic
 - **Smooth Animations** - Framer Motion animations
@@ -37,6 +41,7 @@ A spooktacular web application for hosting Halloween costume contests with real-
 - **Accessibility** - WCAG compliant
 
 ### 🔐 **Authentication**
+
 - **Firebase Auth** - Secure user authentication
 - **User Profiles** - Display names and roles
 - **Admin Roles** - Special admin privileges
@@ -45,19 +50,22 @@ A spooktacular web application for hosting Halloween costume contests with real-
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Firebase project
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd halloween-costume-contest
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
@@ -69,12 +77,14 @@ A spooktacular web application for hosting Halloween costume contests with real-
    - Copy your Firebase config
 
 4. **Configure environment**
+
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your Firebase configuration and admin emails
    ```
 
 5. **Start development server**
+
    ```bash
    npm run dev
    ```
@@ -204,11 +214,13 @@ The app supports multiple environment files for different deployment scenarios:
 ## 🎨 Customization
 
 ### Themes
+
 - Modify `src/index.css` for color schemes
 - Update Halloween icons in `src/assets/`
 - Customize animations in `src/utils/animations.js`
 
 ### Features
+
 - Add new costume categories
 - Implement different voting systems
 - Add costume rating system
@@ -217,11 +229,13 @@ The app supports multiple environment files for different deployment scenarios:
 ## 🚀 Deployment
 
 ### Build for Production
+
 ```bash
 npm run build
 ```
 
 ### Deploy to Firebase Hosting
+
 ```bash
 npm install -g firebase-tools
 firebase login
@@ -230,12 +244,14 @@ firebase deploy
 ```
 
 ### Deploy to Vercel
+
 ```bash
 npm install -g vercel
 vercel --prod
 ```
 
 ### Deploy to Netlify
+
 ```bash
 npm run build
 # Upload dist/ folder to Netlify
@@ -244,6 +260,7 @@ npm run build
 ## 🧪 Development
 
 ### Available Scripts
+
 - `npm run dev` - Start development server (development mode)
 - `npm run dev:prod` - Start development server (production mode)
 - `npm run build` - Build for production
@@ -255,6 +272,7 @@ npm run build
 - `npm run lint:fix` - Fix ESLint errors
 
 ### Code Quality
+
 - ESLint configuration for code quality
 - Prettier for code formatting
 - Custom hooks for reusable logic
@@ -275,14 +293,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎃 Halloween Fun
 
 This app was built with love for Halloween enthusiasts! Perfect for:
+
 - 🏠 **House parties** - Host costume contests at home
-- 🏢 **Office events** - Company Halloween celebrations  
+- 🏢 **Office events** - Company Halloween celebrations
 - 🎓 **School events** - Student costume competitions
 - 🎪 **Community events** - Neighborhood Halloween contests
 
 ## 🆘 Support
 
 If you encounter any issues or have questions:
+
 - Check the [Issues](https://github.com/your-repo/issues) page
 - Create a new issue with detailed information
 - Contact the development team

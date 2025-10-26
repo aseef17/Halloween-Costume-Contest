@@ -5,6 +5,7 @@ Thank you for your interest in contributing to the Halloween Costume Contest App
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Git
@@ -13,17 +14,20 @@ Thank you for your interest in contributing to the Halloween Costume Contest App
 ### Development Setup
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/your-username/halloween-costume-contest.git
    cd halloween-costume-contest
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up Environment**
+
    ```bash
    cp .env.example .env.local
    # Add your Firebase configuration
@@ -53,6 +57,7 @@ Thank you for your interest in contributing to the Halloween Costume Contest App
    - Comment on issues you want to work on
 
 2. **Create Branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -66,6 +71,7 @@ Thank you for your interest in contributing to the Halloween Costume Contest App
    - Test your changes
 
 4. **Commit Changes**
+
    ```bash
    git add .
    git commit -m "feat: add new costume category feature"
@@ -79,18 +85,21 @@ Thank you for your interest in contributing to the Halloween Costume Contest App
 ## 📝 Code Style Guidelines
 
 ### JavaScript/React
+
 - Use functional components with hooks
 - Follow React best practices
 - Use meaningful variable and function names
 - Add JSDoc comments for complex functions
 
 ### CSS/Styling
+
 - Use Tailwind CSS classes
 - Follow mobile-first responsive design
 - Use CSS custom properties for theming
 - Keep styles organized and modular
 
 ### File Organization
+
 - Use descriptive file names
 - Group related files in folders
 - Keep components small and focused
@@ -99,6 +108,7 @@ Thank you for your interest in contributing to the Halloween Costume Contest App
 ## 🧪 Testing
 
 ### Running Tests
+
 ```bash
 npm run test        # Run all tests
 npm run test:watch  # Run tests in watch mode
@@ -106,6 +116,7 @@ npm run test:coverage # Run tests with coverage
 ```
 
 ### Writing Tests
+
 - Test user interactions
 - Test component rendering
 - Test error handling
@@ -123,28 +134,35 @@ When reporting bugs, please include:
 6. **Screenshots** - If applicable
 
 ### Bug Report Template
+
 ```markdown
 ## Bug Description
+
 Brief description of the bug
 
 ## Steps to Reproduce
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
 ## Expected Behavior
+
 What you expected to happen
 
 ## Actual Behavior
+
 What actually happened
 
 ## Environment
+
 - OS: [e.g. macOS, Windows, Linux]
 - Browser: [e.g. Chrome, Firefox, Safari]
 - Version: [e.g. 22]
 
 ## Additional Context
+
 Any other context about the problem
 ```
 
@@ -158,38 +176,47 @@ When requesting features, please include:
 4. **Alternatives** - Other solutions you've considered
 
 ### Feature Request Template
+
 ```markdown
 ## Feature Description
+
 Brief description of the feature
 
 ## Use Case
+
 Why would this feature be useful?
 
 ## Proposed Solution
+
 How should this feature work?
 
 ## Alternatives
+
 What other solutions have you considered?
 
 ## Additional Context
+
 Any other context or screenshots
 ```
 
 ## 🎨 Design Guidelines
 
 ### Halloween Theme
+
 - Use spooky, fun colors (orange, purple, black)
 - Include Halloween icons and imagery
 - Maintain dark theme aesthetic
 - Use appropriate fonts and animations
 
 ### Accessibility
+
 - Ensure keyboard navigation works
 - Use proper ARIA labels
 - Maintain good color contrast
 - Test with screen readers
 
 ### Responsive Design
+
 - Mobile-first approach
 - Test on various screen sizes
 - Ensure touch targets are appropriate
@@ -198,6 +225,7 @@ Any other context or screenshots
 ## 📋 Pull Request Guidelines
 
 ### Before Submitting
+
 - [ ] Code follows style guidelines
 - [ ] Tests pass
 - [ ] No linting errors
@@ -205,25 +233,31 @@ Any other context or screenshots
 - [ ] Screenshots added (if UI changes)
 
 ### PR Description Template
+
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Tests pass
 - [ ] Manual testing completed
 - [ ] Cross-browser testing (if applicable)
 
 ## Screenshots
+
 Add screenshots if UI changes
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -246,6 +280,7 @@ test(auth): add login component tests
 ```
 
 ### Types
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -257,6 +292,7 @@ test(auth): add login component tests
 ## 🎃 Halloween Spirit
 
 Remember to keep the Halloween spirit alive in your contributions:
+
 - Use spooky variable names when appropriate
 - Add Halloween-themed comments
 - Include fun animations and effects
@@ -265,6 +301,7 @@ Remember to keep the Halloween spirit alive in your contributions:
 ## 📞 Getting Help
 
 If you need help:
+
 - Check existing issues and discussions
 - Join our community chat
 - Contact maintainers
@@ -273,6 +310,7 @@ If you need help:
 ## 🙏 Recognition
 
 Contributors will be recognized in:
+
 - README.md contributors section
 - Release notes
 - Project documentation

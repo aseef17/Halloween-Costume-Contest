@@ -94,7 +94,7 @@ export const useAuthForm = (type = "login") => {
         setFormErrors((prev) => ({ ...prev, [field]: null }));
       }
     },
-    [formErrors]
+    [formErrors],
   );
 
   const validateForm = useCallback(() => {
@@ -141,7 +141,7 @@ export const useAuthForm = (type = "login") => {
         console.error("Auth error:", err);
       }
     },
-    [formData, type, validateForm, login, register]
+    [formData, type, validateForm, login, register],
   );
 
   const resetForm = useCallback(() => {
