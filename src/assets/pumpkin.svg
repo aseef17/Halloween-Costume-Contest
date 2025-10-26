@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g>
+    <!-- Pumpkin body -->
+    <ellipse cx="50" cy="55" rx="35" ry="32" fill="#FF7518"/>
+    <ellipse cx="50" cy="55" rx="28" ry="27" fill="#FF8C1A"/>
+    <ellipse cx="50" cy="55" rx="21" ry="22" fill="#FFA040"/>
+
+    <!-- Pumpkin segments -->
+    <path d="M 35 30 Q 35 55 35 75" stroke="#D45F00" stroke-width="2" fill="none"/>
+    <path d="M 42 28 Q 42 55 42 77" stroke="#D45F00" stroke-width="2" fill="none"/>
+    <path d="M 58 28 Q 58 55 58 77" stroke="#D45F00" stroke-width="2" fill="none"/>
+    <path d="M 65 30 Q 65 55 65 75" stroke="#D45F00" stroke-width="2" fill="none"/>
+
+    <!-- Stem -->
+    <rect x="47" y="18" width="6" height="12" rx="3" fill="#7C5E10"/>
+    <ellipse cx="50" cy="18" rx="5" ry="3" fill="#9B7414"/>
+
+    <!-- Jack-o'-lantern face -->
+    <path d="M 38 48 L 42 52 L 38 56" fill="#2D1B00"/>
+    <path d="M 62 48 L 58 52 L 62 56" fill="#2D1B00"/>
+    <path d="M 43 65 Q 50 70 57 65" stroke="#2D1B00" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

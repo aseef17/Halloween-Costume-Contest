@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <g transform="translate(50, 50)">
+    <!-- Left wing -->
+    <path d="M -8 0 Q -15 -8 -25 -5 Q -30 -3 -32 2 Q -28 5 -20 3 Q -15 2 -10 5 Z" fill="#2D1B00"/>
+
+    <!-- Right wing -->
+    <path d="M 8 0 Q 15 -8 25 -5 Q 30 -3 32 2 Q 28 5 20 3 Q 15 2 10 5 Z" fill="#2D1B00"/>
+
+    <!-- Body -->
+    <ellipse cx="0" cy="0" rx="6" ry="8" fill="#1A1A1A"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-6" r="4.5" fill="#2D1B00"/>
+
+    <!-- Ears -->
+    <path d="M -3 -10 L -2 -13 L -1 -10 Z" fill="#2D1B00"/>
+    <path d="M 3 -10 L 2 -13 L 1 -10 Z" fill="#2D1B00"/>
+
+    <!-- Eyes -->
+    <circle cx="-1.5" cy="-6" r="0.8" fill="#FF3333"/>
+    <circle cx="1.5" cy="-6" r="0.8" fill="#FF3333"/>
+  </g>
+</svg>
