@@ -54,7 +54,7 @@ const App = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-black"
+                className="fixed inset-0 flex flex-col items-center text-center justify-center z-50 bg-black"
               >
                 <motion.div
                   animate={{
