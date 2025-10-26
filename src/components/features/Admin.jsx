@@ -14,6 +14,8 @@ import {
   RefreshCw,
   AlertTriangle,
   XCircle,
+  RotateCcw,
+  Trophy,
 } from "lucide-react";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -34,6 +36,8 @@ const Admin = ({ onSwitchToDashboard }) => {
     toggleResults,
     toggleSelfVote,
     resetContest,
+    startRevote,
+    endRevote,
   } = useAdminOperations();
 
   const userCount = costumes.reduce((count, costume) => {
@@ -99,6 +103,40 @@ const Admin = ({ onSwitchToDashboard }) => {
       await signOut(auth);
     } catch (error) {
       console.error("Error signing out:", error);
+    }
+  };
+
+  // Check for first place ties
+  const firstPlaceTie = () => {
+    if (!costumeResults || costumeResults.length < 2) return null;
+
+    const firstPlace = costumeResults.filter((c) => c.rank === 1);
+    if (firstPlace.length > 1 && firstPlace[0].voteCount > 0) {
+      return firstPlace;
+    }
+    return null;
+  };
+
+  const tiedCostumes = firstPlaceTie();
+
+  const handleStartRevote = async () => {
+    if (!tiedCostumes) return;
+
+    try {
+      const tiedIds = tiedCostumes.map((c) => c.id);
+      await promiseToast.revoteStart(startRevote(tiedIds));
+    } catch (error) {
+      adminToasts.revoteError();
+      console.error("Error starting revote:", error);
+    }
+  };
+
+  const handleEndRevote = async () => {
+    try {
+      await promiseToast.revoteEnd(endRevote());
+    } catch (error) {
+      adminToasts.revoteError();
+      console.error("Error ending revote:", error);
     }
   };
 
@@ -385,6 +423,119 @@ const Admin = ({ onSwitchToDashboard }) => {
               </div>
             </div>
 
+            {/* Revote Section - Show when there's a first place tie */}
+            {tiedCostumes &&
+              tiedCostumes.length > 1 &&
+              !appSettings.revoteMode && (
+                <div className="border-t border-orange-500/20 my-6 pt-6">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-yellow-900/20 to-black/40 border border-yellow-500/30">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-base sm:text-lg font-semibold text-orange-300 mb-2 flex items-center gap-2">
+                          <Trophy className="h-5 w-5 text-yellow-400" />
+                          First Place Tie Detected
+                        </h3>
+                        <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-2">
+                          There are {tiedCostumes.length} costumes tied for
+                          first place with {tiedCostumes[0].voteCount} vote
+                          {tiedCostumes[0].voteCount !== 1 ? "s" : ""} each.
+                        </p>
+                        <div className="text-xs text-gray-400 mb-3">
+                          Tied costumes:{" "}
+                          {tiedCostumes.map((c, i) => (
+                            <span
+                              key={c.id}
+                              className="text-orange-300 font-semibold"
+                            >
+                              {c.name}
+                              {i < tiedCostumes.length - 1 ? ", " : ""}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-yellow-400 text-xs sm:text-sm font-semibold">
+                          ⚠️ You can start a revote to break the tie.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleStartRevote}
+                        disabled={isAdminLoading}
+                        className="flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 w-full sm:w-auto rounded-xl py-2.5 px-5"
+                      >
+                        {isAdminLoading ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 1,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                            >
+                              <RefreshCw className="h-5 w-5" />
+                            </motion.div>
+                            Starting...
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="h-5 w-5" />
+                            Start Revote
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {/* Revote Mode Active */}
+            {appSettings.revoteMode && (
+              <div className="border-t border-orange-500/20 my-6 pt-6">
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-900/20 to-black/40 border border-purple-500/30">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex-1">
+                      <h3 className="text-base sm:text-lg font-semibold text-orange-300 mb-2 flex items-center gap-2">
+                        <RotateCcw className="h-5 w-5 text-purple-400 animate-spin" />
+                        Revote Mode Active
+                      </h3>
+                      <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-2">
+                        A revote is currently in progress for first place ties
+                        only.
+                      </p>
+                      <p className="text-purple-400 text-xs sm:text-sm font-semibold">
+                        🔄 Users can now vote again for the tied costumes.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleEndRevote}
+                      disabled={isAdminLoading}
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 w-full sm:w-auto rounded-xl py-2.5 px-5"
+                    >
+                      {isAdminLoading ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                          >
+                            <RefreshCw className="h-5 w-5" />
+                          </motion.div>
+                          Ending...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-5 w-5" />
+                          End Revote
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="border-t border-orange-500/20 my-6 pt-6">
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-red-900/20 to-black/40 border border-red-500/30">
                 <div className="flex flex-col sm:flex-row sm:items-start gap-4">
@@ -519,7 +670,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id
+                                  (vote) => vote.costumeId === costume.id,
                                 ).length
                               }
                             </span>
@@ -547,7 +698,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id
+                              (vote) => vote.costumeId === costume.id,
                             ).length
                           }{" "}
                           votes

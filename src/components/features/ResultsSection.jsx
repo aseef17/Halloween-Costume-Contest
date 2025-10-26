@@ -39,8 +39,23 @@ const ResultsSection = ({ results }) => {
     );
   }
 
-  // Get top 3 for special display
-  const winners = results.slice(0, 3);
+  // Get top 3 for special display, including all tied positions
+  const getWinners = () => {
+    if (results.length === 0) return [];
+
+    const winners = [];
+    const topRanks = [1, 2, 3];
+
+    for (const rank of topRanks) {
+      const costumesAtRank = results.filter((r) => r.rank === rank);
+      winners.push(...costumesAtRank);
+      if (winners.length >= 3) break;
+    }
+
+    return winners.slice(0, 10); // Show at most 10 if there are many ties
+  };
+
+  const winners = getWinners();
 
   return (
     <div className="mb-12">
@@ -73,14 +88,14 @@ const ResultsSection = ({ results }) => {
           {/* Mobile: Stack vertically */}
           <div className="block md:hidden space-y-4">
             {winners.map((winner, index) => {
-              const rank = index + 1;
+              const rank = winner.rank || index + 1;
               const configs = {
                 1: {
                   icon: Trophy,
                   gradient: "from-yellow-400 via-orange-500 to-red-500",
                   textColor: "text-yellow-300",
                   iconColor: "text-yellow-400",
-                  label: "1st Place",
+                  label: winner.isTied ? "1st Place (Tied)" : "1st Place",
                   emoji: "🏆",
                 },
                 2: {
@@ -88,7 +103,7 @@ const ResultsSection = ({ results }) => {
                   gradient: "from-gray-300 via-gray-400 to-gray-500",
                   textColor: "text-gray-200",
                   iconColor: "text-gray-300",
-                  label: "2nd Place",
+                  label: winner.isTied ? "2nd Place (Tied)" : "2nd Place",
                   emoji: "🥈",
                 },
                 3: {
@@ -96,7 +111,7 @@ const ResultsSection = ({ results }) => {
                   gradient: "from-amber-600 via-amber-700 to-amber-800",
                   textColor: "text-amber-400",
                   iconColor: "text-amber-600",
-                  label: "3rd Place",
+                  label: winner.isTied ? "3rd Place (Tied)" : "3rd Place",
                   emoji: "🥉",
                 },
               };
@@ -263,8 +278,8 @@ const ResultsSection = ({ results }) => {
         All Costumes
       </h3>
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {results.map((costume, index) => (
-          <CostumeCard key={costume.id} costume={costume} rank={index + 1} />
+        {results.map((costume) => (
+          <CostumeCard key={costume.id} costume={costume} rank={costume.rank} />
         ))}
       </div>
 

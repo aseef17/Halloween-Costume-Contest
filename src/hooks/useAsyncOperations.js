@@ -47,10 +47,10 @@ export const useCostumeOperations = () => {
         CostumeService.createCostume,
         costumeData,
         userId,
-        userName
+        userName,
       );
     },
-    [execute]
+    [execute],
   );
 
   const updateCostume = useCallback(
@@ -58,7 +58,7 @@ export const useCostumeOperations = () => {
       const { CostumeService } = await import("../services/CostumeService");
       return execute(CostumeService.updateCostume, costumeId, costumeData);
     },
-    [execute]
+    [execute],
   );
 
   const deleteCostume = useCallback(
@@ -66,7 +66,7 @@ export const useCostumeOperations = () => {
       const { CostumeService } = await import("../services/CostumeService");
       return execute(CostumeService.deleteCostume, costumeId);
     },
-    [execute]
+    [execute],
   );
 
   const voteForCostume = useCallback(
@@ -74,7 +74,7 @@ export const useCostumeOperations = () => {
       const { CostumeService } = await import("../services/CostumeService");
       return execute(CostumeService.voteForCostume, costumeId, userId);
     },
-    [execute]
+    [execute],
   );
 
   return {
@@ -99,7 +99,7 @@ export const useAdminOperations = () => {
       const { AdminService } = await import("../services/AdminService");
       return execute(AdminService.toggleVoting, enabled);
     },
-    [execute]
+    [execute],
   );
 
   const toggleResults = useCallback(
@@ -107,7 +107,7 @@ export const useAdminOperations = () => {
       const { AdminService } = await import("../services/AdminService");
       return execute(AdminService.toggleResults, visible);
     },
-    [execute]
+    [execute],
   );
 
   const toggleSelfVote = useCallback(
@@ -115,12 +115,25 @@ export const useAdminOperations = () => {
       const { AdminService } = await import("../services/AdminService");
       return execute(AdminService.toggleSelfVote, allowSelfVote);
     },
-    [execute]
+    [execute],
   );
 
   const resetContest = useCallback(async () => {
     const { AdminService } = await import("../services/AdminService");
     return execute(AdminService.resetContest);
+  }, [execute]);
+
+  const startRevote = useCallback(
+    async (tiedCostumeIds) => {
+      const { AdminService } = await import("../services/AdminService");
+      return execute(AdminService.startRevote, tiedCostumeIds);
+    },
+    [execute],
+  );
+
+  const endRevote = useCallback(async () => {
+    const { AdminService } = await import("../services/AdminService");
+    return execute(AdminService.endRevote);
   }, [execute]);
 
   return {
@@ -131,5 +144,7 @@ export const useAdminOperations = () => {
     toggleResults,
     toggleSelfVote,
     resetContest,
+    startRevote,
+    endRevote,
   };
 };

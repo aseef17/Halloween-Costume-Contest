@@ -47,7 +47,7 @@ export const AppProvider = ({ children }) => {
             lastLogin: new Date(),
           });
           setIsAdmin(
-            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email)
+            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
           );
         } else {
           // Create new user document
@@ -115,7 +115,7 @@ export const AppProvider = ({ children }) => {
 
         // Find user's own costume
         const userCostume = costumesData.find(
-          (costume) => costume.userId === user.uid
+          (costume) => costume.userId === user.uid,
         );
         setUserCostume(userCostume || null);
       },
@@ -123,7 +123,7 @@ export const AppProvider = ({ children }) => {
         console.error("Error listening to costumes:", error);
         setCostumes([]);
         setUserCostume(null);
-      }
+      },
     );
 
     // Listen to votes
@@ -146,7 +146,7 @@ export const AppProvider = ({ children }) => {
         console.error("Error listening to votes:", error);
         setVotes([]);
         setCurrentUserVote(null);
-      }
+      },
     );
 
     return () => {
@@ -157,7 +157,7 @@ export const AppProvider = ({ children }) => {
 
   // Memoized calculated values for better performance
   const costumeResults = useMemo(() => {
-    if (!costumes.length || !votes.length) return [];
+    if (!costumes.length) return [];
 
     // Create a vote count map for O(1) lookup instead of O(n) filtering
     const voteCountMap = votes.reduce((acc, vote) => {
@@ -165,12 +165,37 @@ export const AppProvider = ({ children }) => {
       return acc;
     }, {});
 
-    return costumes
+    // Sort costumes by vote count
+    const sorted = costumes
       .map((costume) => ({
         ...costume,
         voteCount: voteCountMap[costume.id] || 0,
       }))
       .sort((a, b) => b.voteCount - a.voteCount);
+
+    // Add rank and tie information
+    let currentRank = 1;
+    let currentVoteCount = sorted[0]?.voteCount;
+
+    return sorted.map((costume, index) => {
+      // Update rank only when vote count changes
+      if (costume.voteCount !== currentVoteCount) {
+        currentRank = index + 1;
+        currentVoteCount = costume.voteCount;
+      }
+
+      // Check if next costume has same vote count (tied)
+      const nextCostume = sorted[index + 1];
+      const isTied =
+        (index > 0 && sorted[index - 1].voteCount === costume.voteCount) ||
+        (nextCostume && nextCostume.voteCount === costume.voteCount);
+
+      return {
+        ...costume,
+        rank: currentRank,
+        isTied,
+      };
+    });
   }, [costumes, votes]);
 
   // Memoize context value to prevent unnecessary re-renders
@@ -196,7 +221,7 @@ export const AppProvider = ({ children }) => {
       appSettings,
       isAdmin,
       costumeResults,
-    ]
+    ],
   );
 
   return (

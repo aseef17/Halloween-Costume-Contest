@@ -35,12 +35,28 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const votableCostumes = useMemo(() => {
     if (!costumes.length) return [];
 
-    const filtered = costumes.filter(
-      (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
-    );
+    let filtered;
+
+    // If in revote mode, only show the tied costumes
+    if (appSettings.revoteMode && appSettings.revoteCostumeIds?.length > 0) {
+      filtered = costumes.filter((costume) =>
+        appSettings.revoteCostumeIds.includes(costume.id),
+      );
+    } else {
+      // Normal voting mode - filter out own costume if self-voting not allowed
+      filtered = costumes.filter(
+        (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid,
+      );
+    }
 
     return shuffleArray(filtered);
-  }, [costumes, appSettings.allowSelfVote, user?.uid]);
+  }, [
+    costumes,
+    appSettings.allowSelfVote,
+    appSettings.revoteMode,
+    appSettings.revoteCostumeIds,
+    user?.uid,
+  ]);
 
   // Memoized other costumes (excluding user's own)
   const otherCostumes = useMemo(() => {
@@ -89,7 +105,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3"
+                "text-white mb-2 flex items-center gap-3",
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -154,8 +170,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                    ? "The contest has ended. Check out the results!"
-                    : "Submissions are open. Add your costume to join the fun!"}
+                      ? "The contest has ended. Check out the results!"
+                      : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -164,7 +180,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -177,7 +193,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500"
+                        : "bg-yellow-500",
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -255,11 +271,19 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
             <>
               {userCostume ? (
                 <CostumeCard
-                  costume={userCostume}
+                  costume={
+                    appSettings.resultsVisible
+                      ? costumeResults.find((c) => c.id === userCostume.id) ||
+                        userCostume
+                      : userCostume
+                  }
                   showEditOptions={!appSettings.votingEnabled}
                   showVoteButton={appSettings.votingEnabled}
                   rank={
-                    costumeResults.findIndex((c) => c.id === userCostume.id) + 1
+                    appSettings.resultsVisible
+                      ? costumeResults.find((c) => c.id === userCostume.id)
+                          ?.rank
+                      : undefined
                   }
                   onEdit={() => handleEditCostume(userCostume)}
                 />
@@ -320,16 +344,24 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                 ? Array.from({ length: 6 }).map((_, index) => (
                     <CostumeCardSkeleton key={index} />
                   ))
-                : otherCostumes.map((costume) => (
-                    <CostumeCard
-                      key={costume.id}
-                      costume={costume}
-                      showVoteButton={appSettings.votingEnabled}
-                      rank={
-                        costumeResults.findIndex((c) => c.id === costume.id) + 1
-                      }
-                    />
-                  ))}
+                : otherCostumes.map((costume) => {
+                    const costumeWithRank = appSettings.resultsVisible
+                      ? costumeResults.find((c) => c.id === costume.id) ||
+                        costume
+                      : costume;
+                    return (
+                      <CostumeCard
+                        key={costume.id}
+                        costume={costumeWithRank}
+                        showVoteButton={appSettings.votingEnabled}
+                        rank={
+                          appSettings.resultsVisible
+                            ? costumeWithRank.rank
+                            : undefined
+                        }
+                      />
+                    );
+                  })}
             </div>
           </motion.div>
         )}

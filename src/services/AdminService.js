@@ -71,6 +71,52 @@ export const AdminService = {
     }
   },
 
+  // Start revote for first place ties
+  async startRevote(tiedCostumeIds) {
+    try {
+      const batch = writeBatch(db);
+
+      // Delete all existing votes
+      const votesSnapshot = await getDocs(collection(db, "votes"));
+      votesSnapshot.forEach((voteDoc) => {
+        batch.delete(doc(db, "votes", voteDoc.id));
+      });
+
+      // Update settings to enable revote mode
+      const settingsRef = doc(db, "appSettings", "settings");
+      batch.update(settingsRef, {
+        votingEnabled: true,
+        resultsVisible: false,
+        revoteMode: true,
+        revoteCostumeIds: tiedCostumeIds,
+        lastUpdated: serverTimestamp(),
+      });
+
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error("Error starting revote:", error);
+      throw error;
+    }
+  },
+
+  // End revote mode
+  async endRevote() {
+    try {
+      const settingsRef = doc(db, "appSettings", "settings");
+      await updateDoc(settingsRef, {
+        revoteMode: false,
+        revoteCostumeIds: [],
+        votingEnabled: false,
+        lastUpdated: serverTimestamp(),
+      });
+      return true;
+    } catch (error) {
+      console.error("Error ending revote:", error);
+      throw error;
+    }
+  },
+
   // Delete all images from Firebase Storage
   async deleteAllImages() {
     try {
