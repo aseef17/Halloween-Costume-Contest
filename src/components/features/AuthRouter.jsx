@@ -3,7 +3,6 @@ import {
   updateProfile,
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  getRedirectResult,
   applyActionCode,
 } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
@@ -29,16 +28,10 @@ const AuthRouter = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Handle redirect result and email verification links on component mount
+  // Handle email verification links on component mount
   useEffect(() => {
-    const handleAuthActions = async () => {
+    const handleEmailVerification = async () => {
       try {
-        // Handle Google sign-in redirect
-        const result = await getRedirectResult(auth);
-        if (result) {
-          authToasts.loginSuccess();
-        }
-
         // Handle email verification link
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get("mode");
@@ -54,7 +47,7 @@ const AuthRouter = () => {
               await auth.currentUser.reload();
               logger.log(
                 "User reloaded after verification, emailVerified:",
-                auth.currentUser.emailVerified
+                auth.currentUser.emailVerified,
               );
 
               // Force a page reload to trigger fresh auth state
@@ -66,12 +59,12 @@ const AuthRouter = () => {
           }
         }
       } catch (error) {
-        logger.error("Error handling auth actions:", error);
+        logger.error("Error handling email verification:", error);
         authToasts.loginError(error);
       }
     };
 
-    handleAuthActions();
+    handleEmailVerification();
   }, []);
 
   // Update current view based on auth state
@@ -98,7 +91,7 @@ const AuthRouter = () => {
       await signInWithEmailAndPassword(auth, email, password);
       authToasts.loginSuccess();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       authToasts.loginError(error);
     }
     setIsLoading(false);
@@ -119,7 +112,7 @@ const AuthRouter = () => {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
 
       // Update profile with displayName
@@ -135,7 +128,7 @@ const AuthRouter = () => {
       setEmail("");
       setPassword("");
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       authToasts.registerError(error);
     }
     setIsLoading(false);
@@ -146,19 +139,20 @@ const AuthRouter = () => {
     setError("");
 
     try {
-      const { GoogleAuthProvider, signInWithRedirect } = await import(
+      const { GoogleAuthProvider, signInWithPopup } = await import(
         "firebase/auth"
       );
       const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      await signInWithPopup(auth, provider);
+      authToasts.loginSuccess();
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       halloweenToast.error(
-        "Sign-in Failed - Google sign-in failed. Please try again."
+        "Sign-in Failed - Google sign-in failed. Please try again.",
       );
       setError("Google sign-in failed. Please try again.");
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
   // Show loading state
