@@ -106,7 +106,7 @@ const Admin = ({ onSwitchToDashboard }) => {
   const handleConfirmReset = async () => {
     try {
       setShowResetConfirmation(false);
-      await promiseToast.resetContest(resetContest());
+      await promiseToast.contestReset(resetContest());
     } catch (error) {
       adminToasts.resetError();
       console.error("Error resetting contest:", error);
