@@ -59,18 +59,14 @@ const CostumeCard = ({
     if (costume.userId === user.uid && !appSettings.allowSelfVote) return;
 
     try {
-      await promiseToast.voteCast(voteForCostume(costume.id, user.uid));
+      await promiseToast.voteCast(
+        voteForCostume(costume.id, user.uid, appSettings),
+      );
     } catch (error) {
       // Error is handled by the promise toast
       console.error("Error voting:", error);
     }
-  }, [
-    user,
-    costume.userId,
-    costume.id,
-    appSettings.allowSelfVote,
-    voteForCostume,
-  ]);
+  }, [user, costume.userId, costume.id, appSettings, voteForCostume]);
 
   const handleDeleteCostume = useCallback(async () => {
     if (!costume || !user) return;

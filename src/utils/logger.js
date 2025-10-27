@@ -3,7 +3,8 @@
  * Only logs in development mode, silences logs in production
  */
 
-const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
+const isDevelopment =
+  import.meta.env.DEV || import.meta.env.MODE === "development";
 
 /**
  * Logger class with methods that only output in development mode

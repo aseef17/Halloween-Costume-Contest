@@ -76,8 +76,26 @@ export const CostumeService = {
   },
 
   // Vote for a costume
-  async voteForCostume(costumeId, userId) {
+  async voteForCostume(costumeId, userId, appSettings = {}) {
     try {
+      // Check if user is excluded from revote
+      if (
+        appSettings.revoteMode &&
+        appSettings.revoteExcludedUserIds?.includes(userId)
+      ) {
+        throw new Error(
+          "You cannot vote in the revote as you are one of the tied contestants.",
+        );
+      }
+
+      // Check if costume is eligible for voting (during revote, only tied costumes)
+      if (
+        appSettings.revoteMode &&
+        !appSettings.revoteCostumeIds?.includes(costumeId)
+      ) {
+        throw new Error("This costume is not part of the current revote.");
+      }
+
       // First check if user has already voted
       const votesRef = collection(db, "votes");
       const q = query(votesRef, where("voterId", "==", userId));

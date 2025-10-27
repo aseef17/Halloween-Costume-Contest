@@ -73,6 +73,18 @@ export const adminToasts = {
   selfVoteEnabled: () =>
     halloweenToast.success("Self-voting is now enabled! 🎯"),
   selfVoteDisabled: () => halloweenToast.info("Self-voting is now disabled 🚫"),
+  autoRevoteEnabled: () =>
+    halloweenToast.success(
+      "Auto-revote is now enabled! Ties will be handled automatically! 🔄",
+    ),
+  autoRevoteDisabled: () =>
+    halloweenToast.info(
+      "Auto-revote is now disabled. Manual control required 🎮",
+    ),
+  autoRevoteTriggered: () =>
+    halloweenToast.success(
+      "Auto-revote triggered! Breaking the tie automatically! 🏆",
+    ),
   contestReset: () =>
     halloweenToast.success("Contest has been reset! Fresh start! 🔄"),
   resetError: () =>

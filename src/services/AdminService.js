@@ -7,6 +7,7 @@ import {
   writeBatch,
   serverTimestamp,
   setDoc,
+  getDoc,
 } from "firebase/firestore";
 import { ref, listAll, deleteObject } from "firebase/storage";
 import { db, storage, auth } from "../firebaseConfig";
@@ -74,8 +75,23 @@ export const AdminService = {
     }
   },
 
+  // Toggle auto-revote option
+  async toggleAutoRevote(enabled) {
+    try {
+      const settingsRef = doc(db, "appSettings", "settings");
+      await updateDoc(settingsRef, {
+        autoRevoteEnabled: enabled,
+        lastUpdated: serverTimestamp(),
+      });
+      return true;
+    } catch (error) {
+      console.error("Error toggling auto-revote option:", error);
+      throw error;
+    }
+  },
+
   // Start revote for first place ties
-  async startRevote(tiedCostumeIds) {
+  async startRevote(tiedCostumeIds, excludedUserIds = []) {
     try {
       const batch = writeBatch(db);
 
@@ -89,9 +105,10 @@ export const AdminService = {
       const settingsRef = doc(db, "appSettings", "settings");
       batch.update(settingsRef, {
         votingEnabled: true,
-        resultsVisible: false,
+        resultsVisible: true, // Show results during revote
         revoteMode: true,
         revoteCostumeIds: tiedCostumeIds,
+        revoteExcludedUserIds: excludedUserIds,
         lastUpdated: serverTimestamp(),
       });
 
@@ -110,6 +127,7 @@ export const AdminService = {
       await updateDoc(settingsRef, {
         revoteMode: false,
         revoteCostumeIds: [],
+        revoteExcludedUserIds: [],
         votingEnabled: false,
         lastUpdated: serverTimestamp(),
       });
@@ -118,6 +136,63 @@ export const AdminService = {
       console.error("Error ending revote:", error);
       throw error;
     }
+  },
+
+  // Close voting with auto-revote check
+  async closeVotingWithAutoRevote(costumeResults) {
+    try {
+      const settingsRef = doc(db, "appSettings", "settings");
+
+      // First, close voting
+      await updateDoc(settingsRef, {
+        votingEnabled: false,
+        lastUpdated: serverTimestamp(),
+      });
+
+      // Check for first place ties
+      const firstPlaceTie = this.detectFirstPlaceTie(costumeResults);
+
+      if (firstPlaceTie && firstPlaceTie.length > 1) {
+        // Get current settings to check if auto-revote is enabled
+        const settingsDoc = await getDoc(settingsRef);
+        const settings = settingsDoc.data();
+
+        if (settings.autoRevoteEnabled) {
+          // Calculate excluded users (costume owners)
+          const excludedUserIds = firstPlaceTie
+            .map((costume) => costume.userId)
+            .filter(Boolean);
+
+          // Start revote automatically
+          await this.startRevote(
+            firstPlaceTie.map((costume) => costume.id),
+            excludedUserIds,
+          );
+
+          return {
+            autoRevoteTriggered: true,
+            tiedCostumes: firstPlaceTie,
+            excludedUserIds,
+          };
+        }
+      }
+
+      return { autoRevoteTriggered: false };
+    } catch (error) {
+      console.error("Error closing voting with auto-revote check:", error);
+      throw error;
+    }
+  },
+
+  // Helper method to detect first place ties
+  detectFirstPlaceTie(costumeResults) {
+    if (!costumeResults || costumeResults.length < 2) return null;
+
+    const firstPlace = costumeResults.filter((costume) => costume.rank === 1);
+    if (firstPlace.length > 1 && firstPlace[0].voteCount > 0) {
+      return firstPlace;
+    }
+    return null;
   },
 
   // Reset entire contest (clear votes, costumes, users, reset settings, delete images, and logout)
@@ -193,7 +268,7 @@ export const AdminService = {
         logger.log(`   Committing ${batches.length} batch(es)...`);
         await Promise.all(batches.map((batch) => batch.commit()));
         logger.log(
-          `✅ Deleted ${usersCount} users (will be recreated on next login)`
+          `✅ Deleted ${usersCount} users (will be recreated on next login)`,
         );
       } else {
         logger.log("✅ No users to delete");
@@ -209,6 +284,8 @@ export const AdminService = {
         allowSelfVote: false,
         revoteMode: false,
         revoteCostumeIds: [],
+        revoteExcludedUserIds: [],
+        autoRevoteEnabled: false,
         lastReset: serverTimestamp(),
         lastUpdated: serverTimestamp(),
       });

@@ -70,9 +70,14 @@ export const useCostumeOperations = () => {
   );
 
   const voteForCostume = useCallback(
-    async (costumeId, userId) => {
+    async (costumeId, userId, appSettings = {}) => {
       const { CostumeService } = await import("../services/CostumeService");
-      return execute(CostumeService.voteForCostume, costumeId, userId);
+      return execute(
+        CostumeService.voteForCostume,
+        costumeId,
+        userId,
+        appSettings,
+      );
     },
     [execute],
   );
@@ -124,9 +129,25 @@ export const useAdminOperations = () => {
   }, [execute]);
 
   const startRevote = useCallback(
-    async (tiedCostumeIds) => {
+    async (tiedCostumeIds, excludedUserIds = []) => {
       const { AdminService } = await import("../services/AdminService");
-      return execute(AdminService.startRevote, tiedCostumeIds);
+      return execute(AdminService.startRevote, tiedCostumeIds, excludedUserIds);
+    },
+    [execute],
+  );
+
+  const toggleAutoRevote = useCallback(
+    async (enabled) => {
+      const { AdminService } = await import("../services/AdminService");
+      return execute(AdminService.toggleAutoRevote, enabled);
+    },
+    [execute],
+  );
+
+  const closeVotingWithAutoRevote = useCallback(
+    async (costumeResults) => {
+      const { AdminService } = await import("../services/AdminService");
+      return execute(AdminService.closeVotingWithAutoRevote, costumeResults);
     },
     [execute],
   );
@@ -143,8 +164,10 @@ export const useAdminOperations = () => {
     toggleVoting,
     toggleResults,
     toggleSelfVote,
+    toggleAutoRevote,
     resetContest,
     startRevote,
     endRevote,
+    closeVotingWithAutoRevote,
   };
 };
