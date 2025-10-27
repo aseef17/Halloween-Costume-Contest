@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Users, AlertCircle, Bell, CheckCircle } from "lucide-react";
+import {
+  X,
+  Users,
+  AlertCircle,
+  Bell,
+  CheckCircle,
+  RefreshCw,
+} from "lucide-react";
 import Button from "./Button";
 
 const UnvotedUsersModal = ({
@@ -9,8 +16,10 @@ const UnvotedUsersModal = ({
   unvotedUsers,
   onSendReminders,
   onMoveToNextPhase,
+  onRefetch,
   isSendingReminders = false,
   isMovingToNextPhase = false,
+  isRefetching = false,
   title = "Users Who Haven't Voted",
   description = "The following users have not yet cast their votes:",
 }) => {
@@ -46,6 +55,10 @@ const UnvotedUsersModal = ({
 
   const handleMoveToNextPhase = async () => {
     await onMoveToNextPhase();
+  };
+
+  const handleRefetch = async () => {
+    await onRefetch();
   };
 
   const handleClose = () => {
@@ -85,26 +98,50 @@ const UnvotedUsersModal = ({
                       {title}
                     </h2>
                     <p className="text-gray-400 text-sm">
-                      {unvotedUsers.length} user
-                      {unvotedUsers.length !== 1 ? "s" : ""} haven't voted
+                      {unvotedUsers.length === 0
+                        ? "All users have voted! 🎉"
+                        : `${unvotedUsers.length} user${
+                            unvotedUsers.length !== 1 ? "s" : ""
+                          } haven't voted`}
                     </p>
                   </div>
                 </div>
-                <Button
-                  onClick={handleClose}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleRefetch}
+                    variant="ghost"
+                    size="sm"
+                    disabled={
+                      isRefetching || isSendingReminders || isMovingToNextPhase
+                    }
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${
+                        isRefetching ? "animate-spin" : ""
+                      }`}
+                    />
+                  </Button>
+                  <Button
+                    onClick={handleClose}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               <div className="mb-4">
-                <p className="text-gray-300 text-sm mb-4">{description}</p>
+                <p className="text-gray-300 text-sm mb-4">
+                  {unvotedUsers.length === 0
+                    ? "Great news! Everyone has cast their votes. You can now proceed to the next phase."
+                    : description}
+                </p>
 
                 {unvotedUsers.length > 0 && (
                   <div className="flex items-center gap-2 mb-4">
@@ -175,8 +212,8 @@ const UnvotedUsersModal = ({
             </div>
 
             {/* Footer */}
-            {unvotedUsers.length > 0 && (
-              <div className="p-6 border-t border-gray-700/50 bg-gray-900/50">
+            <div className="p-6 border-t border-gray-700/50 bg-gray-900/50">
+              {unvotedUsers.length > 0 ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
                     <Bell className="h-4 w-4" />
@@ -191,7 +228,11 @@ const UnvotedUsersModal = ({
                     <div className="flex-1 flex gap-2">
                       <Button
                         onClick={handleSendReminders}
-                        disabled={isSendingReminders || isMovingToNextPhase}
+                        disabled={
+                          isSendingReminders ||
+                          isMovingToNextPhase ||
+                          isRefetching
+                        }
                         className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 flex-1"
                       >
                         <Bell className="h-4 w-4" />
@@ -199,7 +240,11 @@ const UnvotedUsersModal = ({
                       </Button>
                       <Button
                         onClick={handleMoveToNextPhase}
-                        disabled={isSendingReminders || isMovingToNextPhase}
+                        disabled={
+                          isSendingReminders ||
+                          isMovingToNextPhase ||
+                          isRefetching
+                        }
                         className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 flex-1"
                       >
                         <CheckCircle className="h-4 w-4" />
@@ -211,15 +256,47 @@ const UnvotedUsersModal = ({
                     <Button
                       onClick={handleClose}
                       variant="outline"
-                      disabled={isSendingReminders || isMovingToNextPhase}
+                      disabled={
+                        isSendingReminders ||
+                        isMovingToNextPhase ||
+                        isRefetching
+                      }
                       className="sm:w-auto"
                     >
                       Cancel
                     </Button>
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-green-400 text-sm">
+                    <CheckCircle className="h-4 w-4" />
+                    <span>
+                      All users have voted! Ready to proceed to the next phase.
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={handleMoveToNextPhase}
+                      disabled={isMovingToNextPhase || isRefetching}
+                      className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 flex-1"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      {isMovingToNextPhase ? "Moving..." : "Move to Next Phase"}
+                    </Button>
+                    <Button
+                      onClick={handleClose}
+                      variant="outline"
+                      disabled={isMovingToNextPhase || isRefetching}
+                      className="sm:w-auto"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
       )}

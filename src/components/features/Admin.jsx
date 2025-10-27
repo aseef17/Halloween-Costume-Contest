@@ -41,6 +41,7 @@ const Admin = ({ onSwitchToDashboard }) => {
   const [unvotedUsers, setUnvotedUsers] = useState([]);
   const [isSendingReminders, setIsSendingReminders] = useState(false);
   const [isMovingToNextPhase, setIsMovingToNextPhase] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false);
 
   const {
     isLoading: isAdminLoading,
@@ -268,6 +269,25 @@ const Admin = ({ onSwitchToDashboard }) => {
       logger.error("Error moving to next phase:", error);
     } finally {
       setIsMovingToNextPhase(false);
+    }
+  };
+
+  // Refetch unvoted users
+  const handleRefetchUnvotedUsers = async () => {
+    setIsRefetching(true);
+    try {
+      const allUsers = await fetchAllUsers();
+      const unvoted = NotificationService.getUnvotedUsers(
+        allUsers,
+        votes,
+        revoteVotes,
+        appSettings.revoteMode,
+      );
+      setUnvotedUsers(unvoted);
+    } catch (error) {
+      logger.error("Error refetching unvoted users:", error);
+    } finally {
+      setIsRefetching(false);
     }
   };
 
@@ -1003,8 +1023,10 @@ const Admin = ({ onSwitchToDashboard }) => {
         unvotedUsers={unvotedUsers}
         onSendReminders={handleSendReminders}
         onMoveToNextPhase={handleMoveToNextPhase}
+        onRefetch={handleRefetchUnvotedUsers}
         isSendingReminders={isSendingReminders}
         isMovingToNextPhase={isMovingToNextPhase}
+        isRefetching={isRefetching}
         title={
           appSettings.revoteMode
             ? "Users Who Haven't Voted in Tie Breaker"

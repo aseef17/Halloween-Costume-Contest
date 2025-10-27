@@ -62,6 +62,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const [unvotedUsers, setUnvotedUsers] = useState([]);
   const [isSendingReminders, setIsSendingReminders] = useState(false);
   const [isMovingToNextPhase, setIsMovingToNextPhase] = useState(false);
+  const [isRefetching, setIsRefetching] = useState(false);
   const [dismissedModals, setDismissedModals] = useState({
     revoteNotification: false,
     winnerCelebration: false,
@@ -330,6 +331,25 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     handleEndRevote,
     handleCloseVotingAndShowResults,
   ]);
+
+  // Refetch unvoted users
+  const handleRefetchUnvotedUsers = useCallback(async () => {
+    setIsRefetching(true);
+    try {
+      const allUsers = await fetchAllUsers();
+      const unvoted = NotificationService.getUnvotedUsers(
+        allUsers,
+        votes,
+        revoteVotes,
+        appSettings.revoteMode,
+      );
+      setUnvotedUsers(unvoted);
+    } catch (error) {
+      logger.error("Error refetching unvoted users:", error);
+    } finally {
+      setIsRefetching(false);
+    }
+  }, [fetchAllUsers, votes, revoteVotes, appSettings.revoteMode]);
 
   // Reset dismissed modals when relevant state changes
   useEffect(() => {
@@ -1077,8 +1097,10 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         unvotedUsers={unvotedUsers}
         onSendReminders={handleSendReminders}
         onMoveToNextPhase={handleMoveToNextPhase}
+        onRefetch={handleRefetchUnvotedUsers}
         isSendingReminders={isSendingReminders}
         isMovingToNextPhase={isMovingToNextPhase}
+        isRefetching={isRefetching}
         title={
           appSettings.revoteMode
             ? "Users Who Haven't Voted in Tie Breaker"
