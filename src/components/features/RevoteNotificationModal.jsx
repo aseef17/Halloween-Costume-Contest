@@ -88,7 +88,7 @@ const RevoteNotificationModal = ({
                           Congratulations! You're in the Tie!
                         </h3>
                         <p className="text-gray-300 text-sm mb-3">
-                          Your costume "{userCostume?.title}" is tied for first
+                          Your costume "{userCostume?.name}" is tied for first
                           place with:
                         </p>
                         <div className="space-y-2">
@@ -101,7 +101,7 @@ const RevoteNotificationModal = ({
                               >
                                 <span className="text-gray-400">•</span>
                                 <span className="text-white font-medium">
-                                  {costume.title}
+                                  {costume.name}
                                 </span>
                                 <span className="text-gray-500">
                                   by {costume.userName}
@@ -146,7 +146,7 @@ const RevoteNotificationModal = ({
                             >
                               <span className="text-gray-400">•</span>
                               <span className="text-white font-medium">
-                                {costume.title}
+                                {costume.name}
                               </span>
                               <span className="text-gray-500">
                                 by {costume.userName}
