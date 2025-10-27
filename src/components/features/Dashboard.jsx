@@ -70,6 +70,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     isLoading: isAdminLoading,
     toggleVoting,
     toggleResults,
+    closeVotingWithAutoRevote,
+    endRevote,
   } = useAdminOperations();
 
   // Memoized filtered costumes for voting
@@ -85,13 +87,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       appSettings.revoteCostumeIds.length > 0
     ) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
       // BUT if there's only one costume total, allow voting for it
       const otherCostumes = costumes.filter(
-        (costume) => costume.userId !== user?.uid,
+        (costume) => costume.userId !== user?.uid
       );
 
       if (otherCostumes.length === 0 && costumes.length === 1) {
@@ -100,8 +102,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       } else {
         // Multiple costumes exist - apply normal filtering
         filtered = costumes.filter(
-          (costume) =>
-            appSettings.allowSelfVote || costume.userId !== user?.uid,
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
         );
       }
     }
@@ -160,8 +161,20 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
 
   // New simplified handlers for phase-based flow
   const handleCloseVotingAndShowResults = useCallback(async () => {
-    await handleCloseVotingWithUnvotedCheck();
-  }, [handleCloseVotingWithUnvotedCheck]);
+    try {
+      const result = await promiseToast.closeVotingWithAutoRevote(
+        closeVotingWithAutoRevote(costumeResults)
+      );
+      if (result.autoRevoteTriggered) {
+        adminToasts.autoRevoteTriggered();
+      } else {
+        adminToasts.votingDisabled();
+        adminToasts.resultsShown();
+      }
+    } catch (error) {
+      console.error("Error closing voting and showing results:", error);
+    }
+  }, [closeVotingWithAutoRevote, costumeResults]);
 
   // Phase reversion handlers
   const handleRevertToContestActive = useCallback(async () => {
@@ -188,8 +201,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
 
   // End revote handler
   const handleEndRevote = useCallback(async () => {
-    await handleEndRevoteWithUnvotedCheck();
-  }, [handleEndRevoteWithUnvotedCheck]);
+    try {
+      await promiseToast.revoteEnd(endRevote());
+      adminToasts.revoteEnded();
+    } catch (error) {
+      console.error("Error ending revote:", error);
+    }
+  }, [endRevote]);
 
   // Fetch all users from Firestore
   const fetchAllUsers = useCallback(async () => {
@@ -217,7 +235,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
 
       if (unvoted.length > 0) {
@@ -248,7 +266,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         allUsers,
         votes,
         revoteVotes,
-        true,
+        true
       );
 
       if (unvoted.length > 0) {
@@ -275,7 +293,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
           : "voting_reminder";
         await NotificationService.sendVotingReminders(
           usersToNotify,
-          notificationType,
+          notificationType
         );
 
         // Close the modal and proceed with the original action
@@ -294,7 +312,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         setIsSendingReminders(false);
       }
     },
-    [appSettings.revoteMode, handleEndRevote, handleCloseVotingAndShowResults],
+    [appSettings.revoteMode, handleEndRevote, handleCloseVotingAndShowResults]
   );
 
   // Reset dismissed modals when relevant state changes
@@ -384,7 +402,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -601,7 +619,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                           results?
                         </p>
                         <Button
-                          onClick={handleCloseVotingAndShowResults}
+                          onClick={handleCloseVotingWithUnvotedCheck}
                           disabled={isAdminLoading}
                           className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
                         >
@@ -672,7 +690,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                         users have voted.
                       </p>
                       <Button
-                        onClick={handleEndRevote}
+                        onClick={handleEndRevoteWithUnvotedCheck}
                         disabled={isAdminLoading}
                         className="flex items-center gap-2 mx-auto rounded-xl py-2 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
                       >
@@ -721,8 +739,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -731,7 +749,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -744,7 +762,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -972,8 +990,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {costumes.length === 0
                 ? "No costumes have been submitted yet. Be the first to add one!"
                 : costumes.length === 1 && costumes[0]?.userId === user?.uid
-                  ? "You're the only one who has submitted a costume so far. Wait for others to join!"
-                  : "There are no other costumes to vote for at the moment."}
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
             {costumes.length === 0 &&
               appSettings.contestActive &&
@@ -1031,7 +1049,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         }
         tiedCostumes={costumeResults.filter((costume) => costume.rank === 1)}
         isExcludedFromRevote={appSettings.revoteExcludedUserIds?.includes(
-          user?.uid,
+          user?.uid
         )}
         userCostume={userCostume}
       />
