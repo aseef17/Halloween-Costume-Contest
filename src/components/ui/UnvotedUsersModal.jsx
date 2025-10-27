@@ -2,14 +2,15 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Users, AlertCircle, Bell, CheckCircle } from "lucide-react";
 import Button from "./Button";
-import logger from "../../utils/logger";
 
 const UnvotedUsersModal = ({
   isOpen,
   onClose,
   unvotedUsers,
   onSendReminders,
+  onMoveToNextPhase,
   isSendingReminders = false,
+  isMovingToNextPhase = false,
   title = "Users Who Haven't Voted",
   description = "The following users have not yet cast their votes:",
 }) => {
@@ -41,6 +42,10 @@ const UnvotedUsersModal = ({
 
     await onSendReminders(usersToNotify);
     setSelectedUsers(new Set());
+  };
+
+  const handleMoveToNextPhase = async () => {
+    await onMoveToNextPhase();
   };
 
   const handleClose = () => {
@@ -172,7 +177,7 @@ const UnvotedUsersModal = ({
             {/* Footer */}
             {unvotedUsers.length > 0 && (
               <div className="p-6 border-t border-gray-700/50 bg-gray-900/50">
-                <div className="flex items-center justify-between">
+                <div className="space-y-4">
                   <div className="flex items-center gap-2 text-gray-400 text-sm">
                     <Bell className="h-4 w-4" />
                     <span>
@@ -181,21 +186,35 @@ const UnvotedUsersModal = ({
                       {selectedUsers.size !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 flex gap-2">
+                      <Button
+                        onClick={handleSendReminders}
+                        disabled={isSendingReminders || isMovingToNextPhase}
+                        className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 flex-1"
+                      >
+                        <Bell className="h-4 w-4" />
+                        {isSendingReminders ? "Sending..." : "Send Reminders"}
+                      </Button>
+                      <Button
+                        onClick={handleMoveToNextPhase}
+                        disabled={isSendingReminders || isMovingToNextPhase}
+                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 flex-1"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        {isMovingToNextPhase
+                          ? "Moving..."
+                          : "Move to Next Phase"}
+                      </Button>
+                    </div>
                     <Button
                       onClick={handleClose}
                       variant="outline"
-                      disabled={isSendingReminders}
+                      disabled={isSendingReminders || isMovingToNextPhase}
+                      className="sm:w-auto"
                     >
                       Cancel
-                    </Button>
-                    <Button
-                      onClick={handleSendReminders}
-                      disabled={isSendingReminders}
-                      className="flex items-center gap-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
-                    >
-                      <Bell className="h-4 w-4" />
-                      {isSendingReminders ? "Sending..." : "Send Reminders"}
                     </Button>
                   </div>
                 </div>

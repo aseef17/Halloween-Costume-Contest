@@ -40,6 +40,7 @@ const Admin = ({ onSwitchToDashboard }) => {
   const [showUnvotedUsersModal, setShowUnvotedUsersModal] = useState(false);
   const [unvotedUsers, setUnvotedUsers] = useState([]);
   const [isSendingReminders, setIsSendingReminders] = useState(false);
+  const [isMovingToNextPhase, setIsMovingToNextPhase] = useState(false);
 
   const {
     isLoading: isAdminLoading,
@@ -243,7 +244,19 @@ const Admin = ({ onSwitchToDashboard }) => {
         notificationType,
       );
 
-      // Close the modal and proceed with the original action
+      adminToasts.votingEnabled(); // Success message for reminders sent
+    } catch (error) {
+      logger.error("Error sending reminders:", error);
+    } finally {
+      setIsSendingReminders(false);
+    }
+  };
+
+  // Move to next phase
+  const handleMoveToNextPhase = async () => {
+    setIsMovingToNextPhase(true);
+    try {
+      // Close the modal first
       setShowUnvotedUsersModal(false);
 
       if (appSettings.revoteMode) {
@@ -251,12 +264,10 @@ const Admin = ({ onSwitchToDashboard }) => {
       } else {
         await handleToggleVoting();
       }
-
-      adminToasts.votingEnabled(); // or appropriate success message
     } catch (error) {
-      logger.error("Error sending reminders:", error);
+      logger.error("Error moving to next phase:", error);
     } finally {
-      setIsSendingReminders(false);
+      setIsMovingToNextPhase(false);
     }
   };
 
@@ -991,7 +1002,9 @@ const Admin = ({ onSwitchToDashboard }) => {
         onClose={() => setShowUnvotedUsersModal(false)}
         unvotedUsers={unvotedUsers}
         onSendReminders={handleSendReminders}
+        onMoveToNextPhase={handleMoveToNextPhase}
         isSendingReminders={isSendingReminders}
+        isMovingToNextPhase={isMovingToNextPhase}
         title={
           appSettings.revoteMode
             ? "Users Who Haven't Voted in Tie Breaker"

@@ -61,6 +61,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const [showUnvotedUsersModal, setShowUnvotedUsersModal] = useState(false);
   const [unvotedUsers, setUnvotedUsers] = useState([]);
   const [isSendingReminders, setIsSendingReminders] = useState(false);
+  const [isMovingToNextPhase, setIsMovingToNextPhase] = useState(false);
   const [dismissedModals, setDismissedModals] = useState({
     revoteNotification: false,
     winnerCelebration: false,
@@ -297,24 +298,38 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
           notificationType,
         );
 
-        // Close the modal and proceed with the original action
-        setShowUnvotedUsersModal(false);
-
-        if (appSettings.revoteMode) {
-          await handleEndRevote();
-        } else {
-          await handleCloseVotingAndShowResults();
-        }
-
-        adminToasts.votingEnabled(); // or appropriate success message
+        adminToasts.votingEnabled(); // Success message for reminders sent
       } catch (error) {
         logger.error("Error sending reminders:", error);
       } finally {
         setIsSendingReminders(false);
       }
     },
-    [appSettings.revoteMode, handleEndRevote, handleCloseVotingAndShowResults],
+    [appSettings.revoteMode],
   );
+
+  // Move to next phase
+  const handleMoveToNextPhase = useCallback(async () => {
+    setIsMovingToNextPhase(true);
+    try {
+      // Close the modal first
+      setShowUnvotedUsersModal(false);
+
+      if (appSettings.revoteMode) {
+        await handleEndRevote();
+      } else {
+        await handleCloseVotingAndShowResults();
+      }
+    } catch (error) {
+      logger.error("Error moving to next phase:", error);
+    } finally {
+      setIsMovingToNextPhase(false);
+    }
+  }, [
+    appSettings.revoteMode,
+    handleEndRevote,
+    handleCloseVotingAndShowResults,
+  ]);
 
   // Reset dismissed modals when relevant state changes
   useEffect(() => {
@@ -1061,7 +1076,9 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         onClose={() => setShowUnvotedUsersModal(false)}
         unvotedUsers={unvotedUsers}
         onSendReminders={handleSendReminders}
+        onMoveToNextPhase={handleMoveToNextPhase}
         isSendingReminders={isSendingReminders}
+        isMovingToNextPhase={isMovingToNextPhase}
         title={
           appSettings.revoteMode
             ? "Users Who Haven't Voted in Tie Breaker"
