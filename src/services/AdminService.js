@@ -185,12 +185,12 @@ export const AdminService = {
       // Get all revote votes
       const revotesSnapshot = await getDocs(collection(db, "revotes"));
       const revoteVoters = revotesSnapshot.docs.map(
-        (doc) => doc.data().voterId
+        (doc) => doc.data().voterId,
       );
 
       // Check if all eligible voters have voted
       const allVoted = eligibleVoters.every((voterId) =>
-        revoteVoters.includes(voterId)
+        revoteVoters.includes(voterId),
       );
 
       return {
@@ -198,7 +198,7 @@ export const AdminService = {
         eligibleVoters: eligibleVoters.length,
         votedVoters: revoteVoters.length,
         remainingVoters: eligibleVoters.filter(
-          (voterId) => !revoteVoters.includes(voterId)
+          (voterId) => !revoteVoters.includes(voterId),
         ),
       };
     } catch (error) {
@@ -232,7 +232,7 @@ export const AdminService = {
           // Start revote automatically (this sets votingEnabled: true and resultsVisible: true)
           await AdminService.startRevote(
             firstPlaceTie.map((costume) => costume.id),
-            excludedUserIds
+            excludedUserIds,
           );
 
           return {
@@ -333,7 +333,7 @@ export const AdminService = {
             // Keep: uid, email, displayName, role, emailVerified, createdAt, lastLogin
           });
           logger.log(
-            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`
+            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`,
           );
           operationCount++;
 
