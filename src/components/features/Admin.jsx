@@ -33,6 +33,7 @@ const Admin = ({ onSwitchToDashboard }) => {
   const {
     isLoading: isAdminLoading,
     toggleVoting,
+    toggleResults,
     toggleSelfVote,
     toggleAutoRevote,
     resetContest,
@@ -124,6 +125,29 @@ const Admin = ({ onSwitchToDashboard }) => {
       }
     } catch (error) {
       console.error("Error closing voting and showing results:", error);
+    }
+  };
+
+  // Phase reversion handlers
+  const handleRevertToContestActive = async () => {
+    try {
+      await toggleVoting(false);
+      await toggleResults(false);
+      adminToasts.votingDisabled();
+      adminToasts.resultsHidden();
+    } catch (error) {
+      console.error("Error reverting to contest active:", error);
+    }
+  };
+
+  const handleRevertToVotingEnabled = async () => {
+    try {
+      await toggleResults(false);
+      await toggleVoting(true);
+      adminToasts.resultsHidden();
+      adminToasts.votingEnabled();
+    } catch (error) {
+      console.error("Error reverting to voting enabled:", error);
     }
   };
 
@@ -664,6 +688,118 @@ const Admin = ({ onSwitchToDashboard }) => {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Phase Reversion Controls */}
+      {(appSettings.votingEnabled || appSettings.resultsVisible) && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-blue-900/40 via-gray-900/60 to-green-900/40 border-blue-500/30">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative p-5 sm:p-6">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <RotateCcw className="h-6 w-6 text-blue-400" />
+                  <h2 className="text-2xl sm:text-3xl font-halloween text-blue-300">
+                    Phase Reversion
+                  </h2>
+                </div>
+                <p className="text-gray-400 text-sm mb-6">
+                  Need to go back? Revert to previous phase if users forgot to
+                  add costumes
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {appSettings.resultsVisible && (
+                    <Button
+                      onClick={handleRevertToVotingEnabled}
+                      disabled={isAdminLoading}
+                      variant="outline"
+                      className="flex items-center gap-2 text-blue-300 border-blue-500/50 hover:bg-blue-500/10"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Back to Voting
+                    </Button>
+                  )}
+                  {appSettings.votingEnabled && (
+                    <Button
+                      onClick={handleRevertToContestActive}
+                      disabled={isAdminLoading}
+                      variant="outline"
+                      className="flex items-center gap-2 text-green-300 border-green-500/50 hover:bg-green-500/10"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Back to Contest
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Secure Reset Contest - Only show when contest is active */}
+      {!appSettings.votingEnabled && !appSettings.resultsVisible && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-red-900/20 via-gray-900/60 to-red-900/20 border-red-500/30">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative p-5 sm:p-6">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <AlertTriangle className="h-6 w-6 text-red-400" />
+                  <h2 className="text-2xl sm:text-3xl font-halloween text-red-300">
+                    Danger Zone
+                  </h2>
+                </div>
+                <p className="text-gray-400 text-sm mb-6">
+                  ⚠️ This will permanently delete ALL costumes, votes, and
+                  images.
+                  <br />
+                  <span className="text-red-400 font-semibold">
+                    This action cannot be undone!
+                  </span>
+                  <br />
+                  <span className="text-gray-500 text-xs">
+                    Auto-Revote on Tie will be enabled after reset.
+                  </span>
+                </p>
+                <Button
+                  onClick={handleResetContest}
+                  disabled={isAdminLoading}
+                  className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+                >
+                  {isAdminLoading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </motion.div>
+                      Resetting...
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="h-4 w-4" />
+                      Reset Contest
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </Card>

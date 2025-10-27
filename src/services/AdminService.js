@@ -211,7 +211,7 @@ export const AdminService = {
     }
   },
 
-  // Reset entire contest (clear votes, costumes, users, reset settings, delete images, and logout)
+  // Reset entire contest (clear votes, costumes, users, reset settings, delete images)
   async resetContest() {
     logger.log("Starting contest reset...");
 
@@ -301,7 +301,7 @@ export const AdminService = {
         revoteMode: false,
         revoteCostumeIds: [],
         revoteExcludedUserIds: [],
-        autoRevoteEnabled: false,
+        autoRevoteEnabled: true,
         lastReset: serverTimestamp(),
         lastUpdated: serverTimestamp(),
       });

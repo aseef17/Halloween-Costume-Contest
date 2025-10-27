@@ -17,6 +17,7 @@ import {
   Trophy,
   Zap,
   AlertCircle,
+  AlertTriangle,
   Mail,
   RefreshCw,
 } from "lucide-react";
@@ -47,8 +48,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const {
     isLoading: isAdminLoading,
     toggleVoting,
+    toggleResults,
     closeVotingWithAutoRevote,
-    resetContest,
   } = useAdminOperations();
 
   // Memoized filtered costumes for voting
@@ -139,7 +140,9 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   // New simplified handlers for phase-based flow
   const handleCloseVotingAndShowResults = useCallback(async () => {
     try {
-      const result = await closeVotingWithAutoRevote(costumeResults);
+      const result = await promiseToast.closeVotingWithAutoRevote(
+        closeVotingWithAutoRevote(costumeResults)
+      );
       if (result.autoRevoteTriggered) {
         adminToasts.autoRevoteTriggered();
       } else {
@@ -151,14 +154,28 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     }
   }, [closeVotingWithAutoRevote, costumeResults]);
 
-  const handleResetContest = useCallback(async () => {
+  // Phase reversion handlers
+  const handleRevertToContestActive = useCallback(async () => {
     try {
-      await promiseToast.resetContest(resetContest());
+      await promiseToast.toggleVoting(toggleVoting(false));
+      await promiseToast.toggleResults(toggleResults(false));
+      adminToasts.votingDisabled();
+      adminToasts.resultsHidden();
     } catch (error) {
-      adminToasts.resetError();
-      console.error("Error resetting contest:", error);
+      console.error("Error reverting to contest active:", error);
     }
-  }, [resetContest]);
+  }, [toggleVoting, toggleResults]);
+
+  const handleRevertToVotingEnabled = useCallback(async () => {
+    try {
+      await promiseToast.toggleResults(toggleResults(false));
+      await promiseToast.toggleVoting(toggleVoting(true));
+      adminToasts.resultsHidden();
+      adminToasts.votingEnabled();
+    } catch (error) {
+      console.error("Error reverting to voting enabled:", error);
+    }
+  }, [toggleVoting, toggleResults]);
 
   // Loading states
   const isLoadingCostumes = !costumes.length;
@@ -429,42 +446,42 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                           )}
                         </Button>
                       </div>
-                    ) : !appSettings.votingEnabled &&
-                      appSettings.resultsVisible ? (
-                      <div>
-                        <p className="text-gray-400 text-sm mb-3">
-                          Results are shown. Contest is complete. Ready to
-                          reset?
-                        </p>
-                        <Button
-                          onClick={handleResetContest}
-                          disabled={isAdminLoading}
-                          className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-                        >
-                          {isAdminLoading ? (
-                            <>
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{
-                                  duration: 1,
-                                  repeat: Infinity,
-                                  ease: "linear",
-                                }}
-                              >
-                                <RefreshCw className="h-4 w-4" />
-                              </motion.div>
-                              Resetting...
-                            </>
-                          ) : (
-                            <>
-                              <RotateCcw className="h-4 w-4" />
-                              Reset Contest
-                            </>
-                          )}
-                        </Button>
-                      </div>
                     ) : null}
                   </div>
+
+                  {/* Phase Reversion Controls */}
+                  {(appSettings.votingEnabled ||
+                    appSettings.resultsVisible) && (
+                    <div className="text-center pt-4 border-t border-purple-500/20">
+                      <p className="text-gray-400 text-xs mb-3">
+                        Need to go back? Revert to previous phase
+                      </p>
+                      <div className="flex gap-2 justify-center">
+                        {appSettings.resultsVisible && (
+                          <Button
+                            onClick={handleRevertToVotingEnabled}
+                            disabled={isAdminLoading}
+                            variant="outline"
+                            className="flex items-center gap-2 text-blue-300 border-blue-500/50 hover:bg-blue-500/10"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            Back to Voting
+                          </Button>
+                        )}
+                        {appSettings.votingEnabled && (
+                          <Button
+                            onClick={handleRevertToContestActive}
+                            disabled={isAdminLoading}
+                            variant="outline"
+                            className="flex items-center gap-2 text-green-300 border-green-500/50 hover:bg-green-500/10"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                            Back to Contest
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Full Admin Panel */}
                   <div className="text-center pt-4 border-t border-purple-500/20">
@@ -558,6 +575,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
 
             {!userCostume &&
               !appSettings.votingEnabled &&
+              !appSettings.resultsVisible &&
               !showAddCostume &&
               user?.emailVerified && (
                 <Button
@@ -570,6 +588,21 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <span className="font-semibold">Add Costume</span>
                 </Button>
               )}
+
+            {/* Costume submission status messages */}
+            {!userCostume && user?.emailVerified && (
+              <div className="text-center">
+                {appSettings.votingEnabled ? (
+                  <p className="text-yellow-400 text-sm">
+                    ⚠️ Costume submission is closed while voting is active
+                  </p>
+                ) : appSettings.resultsVisible ? (
+                  <p className="text-purple-400 text-sm">
+                    🏁 Contest is over - costume submission is closed
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {showAddCostume && (
