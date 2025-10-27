@@ -200,10 +200,7 @@ const NotificationModal = () => {
                     Dismiss
                   </Button>
                   <Button
-                    onClick={() => {
-                      // Scroll to voting section or refresh page to show voting
-                      window.location.reload();
-                    }}
+                    onClick={handleDismissAll}
                     className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-semibold"
                   >
                     <Vote className="h-4 w-4 mr-2" />
