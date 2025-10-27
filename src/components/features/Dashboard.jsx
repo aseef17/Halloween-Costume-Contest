@@ -30,6 +30,9 @@ import VotingSection from "./VotingSection";
 import RevoteSection from "./RevoteSection";
 import ResultsSection from "./ResultsSection";
 import RevoteNotificationModal from "./RevoteNotificationModal";
+import UnvotedUsersModal from "../ui/UnvotedUsersModal";
+import NotificationService from "../../services/NotificationService";
+import logger from "../../utils/logger";
 import HalloweenIcon from "../layout/HalloweenIcon";
 import { useApp } from "../../hooks/useApp";
 import { gridClasses, typography } from "../../utils/responsive";
@@ -41,12 +44,23 @@ import { useAdminOperations } from "../../hooks/useAsyncOperations";
 import { adminToasts, promiseToast } from "../../utils/toastUtils";
 
 const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
-  const { user, userCostume, costumes, appSettings, costumeResults } = useApp();
+  const {
+    user,
+    userCostume,
+    costumes,
+    votes,
+    revoteVotes,
+    appSettings,
+    costumeResults,
+  } = useApp();
 
   const [showAddCostume, setShowAddCostume] = useState(false);
   const [editingCostume, setEditingCostume] = useState(null);
   const [showQuickControls, setShowQuickControls] = useState(false);
   const [showRevoteNotification, setShowRevoteNotification] = useState(false);
+  const [showUnvotedUsersModal, setShowUnvotedUsersModal] = useState(false);
+  const [unvotedUsers, setUnvotedUsers] = useState([]);
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
   const [dismissedModals, setDismissedModals] = useState({
     revoteNotification: false,
     winnerCelebration: false,
@@ -56,8 +70,6 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     isLoading: isAdminLoading,
     toggleVoting,
     toggleResults,
-    endRevote,
-    closeVotingWithAutoRevote,
   } = useAdminOperations();
 
   // Memoized filtered costumes for voting
@@ -73,13 +85,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       appSettings.revoteCostumeIds.length > 0
     ) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
       // BUT if there's only one costume total, allow voting for it
       const otherCostumes = costumes.filter(
-        (costume) => costume.userId !== user?.uid,
+        (costume) => costume.userId !== user?.uid
       );
 
       if (otherCostumes.length === 0 && costumes.length === 1) {
@@ -88,8 +100,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       } else {
         // Multiple costumes exist - apply normal filtering
         filtered = costumes.filter(
-          (costume) =>
-            appSettings.allowSelfVote || costume.userId !== user?.uid,
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
         );
       }
     }
@@ -148,20 +159,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
 
   // New simplified handlers for phase-based flow
   const handleCloseVotingAndShowResults = useCallback(async () => {
-    try {
-      const result = await promiseToast.closeVotingWithAutoRevote(
-        closeVotingWithAutoRevote(costumeResults),
-      );
-      if (result.autoRevoteTriggered) {
-        adminToasts.autoRevoteTriggered();
-      } else {
-        adminToasts.votingDisabled();
-        adminToasts.resultsShown();
-      }
-    } catch (error) {
-      console.error("Error closing voting and showing results:", error);
-    }
-  }, [closeVotingWithAutoRevote, costumeResults]);
+    await handleCloseVotingWithUnvotedCheck();
+  }, [handleCloseVotingWithUnvotedCheck]);
 
   // Phase reversion handlers
   const handleRevertToContestActive = useCallback(async () => {
@@ -188,13 +187,114 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
 
   // End revote handler
   const handleEndRevote = useCallback(async () => {
+    await handleEndRevoteWithUnvotedCheck();
+  }, [handleEndRevoteWithUnvotedCheck]);
+
+  // Fetch all users from Firestore
+  const fetchAllUsers = useCallback(async () => {
     try {
-      await promiseToast.revoteEnd(endRevote());
-      adminToasts.revoteEnded();
+      const { collection, getDocs } = await import("firebase/firestore");
+      const { db } = await import("../../firebaseConfig");
+
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const users = usersSnapshot.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data(),
+      }));
+      return users;
     } catch (error) {
-      console.error("Error ending revote:", error);
+      logger.error("Error fetching users:", error);
+      return [];
     }
-  }, [endRevote]);
+  }, []);
+
+  // Handle closing voting with unvoted users check
+  const handleCloseVotingWithUnvotedCheck = useCallback(async () => {
+    try {
+      const allUsers = await fetchAllUsers();
+      const unvoted = NotificationService.getUnvotedUsers(
+        allUsers,
+        votes,
+        revoteVotes,
+        appSettings.revoteMode
+      );
+
+      if (unvoted.length > 0) {
+        setUnvotedUsers(unvoted);
+        setShowUnvotedUsersModal(true);
+      } else {
+        // No unvoted users, proceed with closing voting
+        await handleCloseVotingAndShowResults();
+      }
+    } catch (error) {
+      logger.error("Error checking unvoted users:", error);
+      // Fallback to normal close voting
+      await handleCloseVotingAndShowResults();
+    }
+  }, [
+    fetchAllUsers,
+    votes,
+    revoteVotes,
+    appSettings.revoteMode,
+    handleCloseVotingAndShowResults,
+  ]);
+
+  // Handle ending tie breaker vote with unvoted users check
+  const handleEndRevoteWithUnvotedCheck = useCallback(async () => {
+    try {
+      const allUsers = await fetchAllUsers();
+      const unvoted = NotificationService.getUnvotedUsers(
+        allUsers,
+        votes,
+        revoteVotes,
+        true
+      );
+
+      if (unvoted.length > 0) {
+        setUnvotedUsers(unvoted);
+        setShowUnvotedUsersModal(true);
+      } else {
+        // No unvoted users, proceed with ending revote
+        await handleEndRevote();
+      }
+    } catch (error) {
+      logger.error("Error checking unvoted users for revote:", error);
+      // Fallback to normal end revote
+      await handleEndRevote();
+    }
+  }, [fetchAllUsers, votes, revoteVotes, handleEndRevote]);
+
+  // Send reminders to users
+  const handleSendReminders = useCallback(
+    async (usersToNotify) => {
+      setIsSendingReminders(true);
+      try {
+        const notificationType = appSettings.revoteMode
+          ? "tie_breaker_reminder"
+          : "voting_reminder";
+        await NotificationService.sendVotingReminders(
+          usersToNotify,
+          notificationType
+        );
+
+        // Close the modal and proceed with the original action
+        setShowUnvotedUsersModal(false);
+
+        if (appSettings.revoteMode) {
+          await handleEndRevote();
+        } else {
+          await handleCloseVotingAndShowResults();
+        }
+
+        adminToasts.votingEnabled(); // or appropriate success message
+      } catch (error) {
+        logger.error("Error sending reminders:", error);
+      } finally {
+        setIsSendingReminders(false);
+      }
+    },
+    [appSettings.revoteMode, handleEndRevote, handleCloseVotingAndShowResults]
+  );
 
   // Reset dismissed modals when relevant state changes
   useEffect(() => {
@@ -283,7 +383,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -620,8 +720,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -630,7 +730,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -643,7 +743,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -775,17 +875,22 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                         : "Add your costume to join the Halloween contest!"}
                     </p>
 
-                    {!appSettings.votingEnabled && user?.emailVerified && (
-                      <Button
-                        onClick={() => setShowAddCostume(true)}
-                        variant="default"
-                        animation="haunted"
-                        className="flex items-center gap-2 mx-auto py-3 px-6"
-                      >
-                        <PlusCircle className="h-5 w-5" />
-                        <span className="font-semibold">Add Your Costume</span>
-                      </Button>
-                    )}
+                    {appSettings.contestActive &&
+                      !appSettings.votingEnabled &&
+                      !appSettings.resultsVisible &&
+                      user?.emailVerified && (
+                        <Button
+                          onClick={() => setShowAddCostume(true)}
+                          variant="default"
+                          animation="haunted"
+                          className="flex items-center gap-2 mx-auto py-3 px-6"
+                        >
+                          <PlusCircle className="h-5 w-5" />
+                          <span className="font-semibold">
+                            Add Your Costume
+                          </span>
+                        </Button>
+                      )}
                   </div>
                 </Card>
               ) : null}
@@ -866,22 +971,25 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {costumes.length === 0
                 ? "No costumes have been submitted yet. Be the first to add one!"
                 : costumes.length === 1 && costumes[0]?.userId === user?.uid
-                  ? "You're the only one who has submitted a costume so far. Wait for others to join!"
-                  : "There are no other costumes to vote for at the moment."}
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
-            {costumes.length === 0 && !appSettings.votingEnabled && (
-              <div className="mt-4">
-                <Button
-                  onClick={() => setShowAddCostume(true)}
-                  variant="default"
-                  animation="haunted"
-                  className="flex items-center gap-2 mx-auto py-3 px-6"
-                >
-                  <PlusCircle className="h-5 w-5" />
-                  <span className="font-semibold">Add Your Costume</span>
-                </Button>
-              </div>
-            )}
+            {costumes.length === 0 &&
+              appSettings.contestActive &&
+              !appSettings.votingEnabled &&
+              !appSettings.resultsVisible && (
+                <div className="mt-4">
+                  <Button
+                    onClick={() => setShowAddCostume(true)}
+                    variant="default"
+                    animation="haunted"
+                    className="flex items-center gap-2 mx-auto py-3 px-6"
+                  >
+                    <PlusCircle className="h-5 w-5" />
+                    <span className="font-semibold">Add Your Costume</span>
+                  </Button>
+                </div>
+              )}
           </div>
         </Card>
       )}
@@ -922,9 +1030,28 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         }
         tiedCostumes={costumeResults.filter((costume) => costume.rank === 1)}
         isExcludedFromRevote={appSettings.revoteExcludedUserIds?.includes(
-          user?.uid,
+          user?.uid
         )}
         userCostume={userCostume}
+      />
+
+      {/* Unvoted Users Modal */}
+      <UnvotedUsersModal
+        isOpen={showUnvotedUsersModal}
+        onClose={() => setShowUnvotedUsersModal(false)}
+        unvotedUsers={unvotedUsers}
+        onSendReminders={handleSendReminders}
+        isSendingReminders={isSendingReminders}
+        title={
+          appSettings.revoteMode
+            ? "Users Who Haven't Voted in Tie Breaker"
+            : "Users Who Haven't Voted"
+        }
+        description={
+          appSettings.revoteMode
+            ? "The following users have not yet cast their tie breaker votes:"
+            : "The following users have not yet cast their votes:"
+        }
       />
     </motion.div>
   );

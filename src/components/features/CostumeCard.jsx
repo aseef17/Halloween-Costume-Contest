@@ -60,7 +60,7 @@ const CostumeCard = ({
 
     try {
       await promiseToast.voteCast(
-        voteForCostume(costume.id, user.uid, appSettings),
+        voteForCostume(costume.id, user.uid, appSettings)
       );
     } catch (error) {
       // Error is handled by the promise toast
@@ -90,7 +90,7 @@ const CostumeCard = ({
         showRank && rank <= 3
           ? "border-orange-400/70 shadow-orange-400/20"
           : "border-orange-500/40 shadow-orange-500/10",
-        isVotedFor && "ring-2 ring-purple-500/50 border-purple-500/50",
+        isVotedFor && "ring-2 ring-purple-500/50 border-purple-500/50"
       )}
       {...animationVariants.fadeInUp}
       transition={{ duration: 0.5 }}
@@ -114,7 +114,7 @@ const CostumeCard = ({
               "flex items-center justify-center w-16 h-16 rounded-full border-4 border-black/50",
               rank === 1 && "bg-gradient-to-br from-yellow-400 to-orange-500",
               rank === 2 && "bg-gradient-to-br from-gray-300 to-gray-500",
-              rank === 3 && "bg-gradient-to-br from-amber-600 to-amber-800",
+              rank === 3 && "bg-gradient-to-br from-amber-600 to-amber-800"
             )}
           >
             <Award className="w-8 h-8 text-white drop-shadow-lg" />
@@ -151,7 +151,7 @@ const CostumeCard = ({
                   rank === 3 &&
                     "bg-amber-600/20 border-amber-600/50 text-amber-400",
                   rank > 3 &&
-                    "bg-orange-500/20 border-orange-500/50 text-orange-300",
+                    "bg-orange-500/20 border-orange-500/50 text-orange-300"
                 )}
               >
                 #{rank}
@@ -166,7 +166,7 @@ const CostumeCard = ({
           <h3
             className={cn(
               "text-2xl sm:text-3xl font-bold text-orange-300 font-display mb-2 leading-tight",
-              rank && rank <= 3 && "text-3xl sm:text-4xl",
+              rank && rank <= 3 && "text-3xl sm:text-4xl"
             )}
           >
             {costume.name}
@@ -254,7 +254,7 @@ const CostumeCard = ({
                   "flex-1 sm:flex-none flex items-center justify-center gap-2 py-3 px-6 text-sm sm:text-base font-semibold rounded-xl transition-all",
                   isVotedFor
                     ? "bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-                    : "bg-gradient-to-r from-orange-500 to-purple-700 hover:from-orange-600 hover:to-purple-800",
+                    : "bg-gradient-to-r from-orange-500 to-purple-700 hover:from-orange-600 hover:to-purple-800"
                 )}
                 aria-label={ariaLabels.vote(costume.name)}
                 aria-pressed={isVotedFor}
@@ -287,52 +287,55 @@ const CostumeCard = ({
               </Button>
             )}
 
-            {showEditOptions && !appSettings.votingEnabled && (
-              <>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 py-2.5 px-4 rounded-xl border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500/10"
-                  onClick={onEdit}
-                  aria-label={ariaLabels.edit(costume.name)}
-                  onKeyDown={keyboardNavigation.handleEnter(onEdit)}
-                  {...hoverAnimations.buttonHover}
-                >
-                  <Edit className="w-4 h-4" /> Edit
-                </Button>
+            {showEditOptions &&
+              appSettings.contestActive &&
+              !appSettings.votingEnabled &&
+              !appSettings.resultsVisible && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 py-2.5 px-4 rounded-xl border-orange-500/30 hover:border-orange-500/50 hover:bg-orange-500/10"
+                    onClick={onEdit}
+                    aria-label={ariaLabels.edit(costume.name)}
+                    onKeyDown={keyboardNavigation.handleEnter(onEdit)}
+                    {...hoverAnimations.buttonHover}
+                  >
+                    <Edit className="w-4 h-4" /> Edit
+                  </Button>
 
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                  onClick={handleDeleteCostume}
-                  disabled={isLoading}
-                  aria-label={ariaLabels.delete(costume.name)}
-                  onKeyDown={keyboardNavigation.handleEnter(
-                    handleDeleteCostume,
-                  )}
-                  {...hoverAnimations.buttonHover}
-                >
-                  {isLoading ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </motion.div>
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-4 h-4" /> Delete
-                    </>
-                  )}
-                </Button>
-              </>
-            )}
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 py-2.5 px-4 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                    onClick={handleDeleteCostume}
+                    disabled={isLoading}
+                    aria-label={ariaLabels.delete(costume.name)}
+                    onKeyDown={keyboardNavigation.handleEnter(
+                      handleDeleteCostume
+                    )}
+                    {...hoverAnimations.buttonHover}
+                  >
+                    {isLoading ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </motion.div>
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" /> Delete
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
           </div>
         </div>
       </div>

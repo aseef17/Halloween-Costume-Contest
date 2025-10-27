@@ -23,6 +23,9 @@ import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { Switch } from "../ui/Switch";
 import ConfirmationModal from "../ui/ConfirmationModal";
+import UnvotedUsersModal from "../ui/UnvotedUsersModal";
+import NotificationService from "../../services/NotificationService";
+import logger from "../../utils/logger";
 import HalloweenIcon from "../layout/HalloweenIcon";
 import AdminService from "../../services/AdminService";
 import { useApp } from "../../hooks/useApp";
@@ -34,6 +37,9 @@ const Admin = ({ onSwitchToDashboard }) => {
   const { user, costumes, votes, revoteVotes, appSettings, costumeResults } =
     useApp();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+  const [showUnvotedUsersModal, setShowUnvotedUsersModal] = useState(false);
+  const [unvotedUsers, setUnvotedUsers] = useState([]);
+  const [isSendingReminders, setIsSendingReminders] = useState(false);
 
   const {
     isLoading: isAdminLoading,
@@ -42,7 +48,6 @@ const Admin = ({ onSwitchToDashboard }) => {
     toggleSelfVote,
     toggleAutoRevote,
     resetContest,
-    endRevote,
     closeVotingWithAutoRevote,
   } = useAdminOperations();
 
@@ -127,18 +132,7 @@ const Admin = ({ onSwitchToDashboard }) => {
 
   // New simplified handlers
   const handleCloseVotingAndShowResults = async () => {
-    try {
-      // Close voting and check for auto-revote
-      const result = await closeVotingWithAutoRevote(costumeResults);
-      if (result.autoRevoteTriggered) {
-        adminToasts.autoRevoteTriggered();
-      } else {
-        adminToasts.votingDisabled();
-        adminToasts.resultsShown();
-      }
-    } catch (error) {
-      console.error("Error closing voting and showing results:", error);
-    }
+    await handleCloseVotingWithUnvotedCheck();
   };
 
   // Phase reversion handlers
@@ -166,11 +160,103 @@ const Admin = ({ onSwitchToDashboard }) => {
 
   // End revote handler
   const handleEndRevote = async () => {
+    await handleEndRevoteWithUnvotedCheck();
+  };
+
+  // Fetch all users from Firestore
+  const fetchAllUsers = async () => {
     try {
-      await promiseToast.revoteEnd(endRevote());
-      adminToasts.revoteEnded();
+      const { collection, getDocs } = await import("firebase/firestore");
+      const { db } = await import("../../firebaseConfig");
+
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const users = usersSnapshot.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data(),
+      }));
+      return users;
     } catch (error) {
-      console.error("Error ending revote:", error);
+      logger.error("Error fetching users:", error);
+      return [];
+    }
+  };
+
+  // Handle closing voting with unvoted users check
+  const handleCloseVotingWithUnvotedCheck = async () => {
+    try {
+      const allUsers = await fetchAllUsers();
+      const unvoted = NotificationService.getUnvotedUsers(
+        allUsers,
+        votes,
+        revoteVotes,
+        appSettings.revoteMode
+      );
+
+      if (unvoted.length > 0) {
+        setUnvotedUsers(unvoted);
+        setShowUnvotedUsersModal(true);
+      } else {
+        // No unvoted users, proceed with closing voting
+        await handleToggleVoting();
+      }
+    } catch (error) {
+      logger.error("Error checking unvoted users:", error);
+      // Fallback to normal close voting
+      await handleToggleVoting();
+    }
+  };
+
+  // Handle ending tie breaker vote with unvoted users check
+  const handleEndRevoteWithUnvotedCheck = async () => {
+    try {
+      const allUsers = await fetchAllUsers();
+      const unvoted = NotificationService.getUnvotedUsers(
+        allUsers,
+        votes,
+        revoteVotes,
+        true
+      );
+
+      if (unvoted.length > 0) {
+        setUnvotedUsers(unvoted);
+        setShowUnvotedUsersModal(true);
+      } else {
+        // No unvoted users, proceed with ending revote
+        await handleEndRevote();
+      }
+    } catch (error) {
+      logger.error("Error checking unvoted users for revote:", error);
+      // Fallback to normal end revote
+      await handleEndRevote();
+    }
+  };
+
+  // Send reminders to users
+  const handleSendReminders = async (usersToNotify) => {
+    setIsSendingReminders(true);
+    try {
+      const notificationType = appSettings.revoteMode
+        ? "tie_breaker_reminder"
+        : "voting_reminder";
+      await NotificationService.sendVotingReminders(
+        usersToNotify,
+        notificationType
+      );
+
+      // Close the modal and proceed with the original action
+      setShowUnvotedUsersModal(false);
+
+      if (appSettings.revoteMode) {
+        await handleEndRevote();
+      } else {
+        await handleToggleVoting();
+      }
+
+      adminToasts.votingEnabled(); // or appropriate success message
+    } catch (error) {
+      logger.error("Error sending reminders:", error);
+    } finally {
+      setIsSendingReminders(false);
     }
   };
 
@@ -731,7 +817,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id,
+                                  (vote) => vote.costumeId === costume.id
                                 ).length
                               }
                             </span>
@@ -759,7 +845,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id,
+                              (vote) => vote.costumeId === costume.id
                             ).length
                           }{" "}
                           votes
@@ -897,6 +983,25 @@ const Admin = ({ onSwitchToDashboard }) => {
         confirmText="Reset Contest"
         confirmVariant="destructive"
         isLoading={isAdminLoading}
+      />
+
+      {/* Unvoted Users Modal */}
+      <UnvotedUsersModal
+        isOpen={showUnvotedUsersModal}
+        onClose={() => setShowUnvotedUsersModal(false)}
+        unvotedUsers={unvotedUsers}
+        onSendReminders={handleSendReminders}
+        isSendingReminders={isSendingReminders}
+        title={
+          appSettings.revoteMode
+            ? "Users Who Haven't Voted in Tie Breaker"
+            : "Users Who Haven't Voted"
+        }
+        description={
+          appSettings.revoteMode
+            ? "The following users have not yet cast their tie breaker votes:"
+            : "The following users have not yet cast their votes:"
+        }
       />
     </motion.div>
   );
