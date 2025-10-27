@@ -19,7 +19,7 @@ const VotingSection = ({ costumes }) => {
     appSettings.revoteCostumeIds &&
     appSettings.revoteCostumeIds.length > 0
       ? costumes.filter((costume) =>
-          appSettings.revoteCostumeIds.includes(costume.id)
+          appSettings.revoteCostumeIds.includes(costume.id),
         )
       : costumes;
 
@@ -51,13 +51,13 @@ const VotingSection = ({ costumes }) => {
               ? !user?.emailVerified
                 ? "Email verification required"
                 : isUserExcluded
-                ? "You're excluded from revote"
-                : "Breaking the tie"
+                  ? "You're excluded from revote"
+                  : "Breaking the tie"
               : !user?.emailVerified
-              ? "Email verification required"
-              : hasVoted
-              ? "You can change your vote"
-              : "Pick your favorite"}
+                ? "Email verification required"
+                : hasVoted
+                  ? "You can change your vote"
+                  : "Pick your favorite"}
           </span>
         </div>
       </div>
@@ -83,8 +83,8 @@ const VotingSection = ({ costumes }) => {
                   {!user?.emailVerified
                     ? "Please verify your email address to participate in voting."
                     : isUserExcluded
-                    ? "You're one of the tied contestants, so you cannot participate in the revote."
-                    : "The admin has initiated a revote to break the first place tie. Vote for your favorite among the tied costumes."}
+                      ? "You're one of the tied contestants, so you cannot participate in the revote."
+                      : "The admin has initiated a revote to break the first place tie. Vote for your favorite among the tied costumes."}
                 </p>
               </div>
               <Sparkles className="hidden sm:block w-5 h-5 text-yellow-400 animate-pulse" />

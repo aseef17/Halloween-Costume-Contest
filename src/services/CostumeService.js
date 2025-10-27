@@ -24,7 +24,7 @@ export const CostumeService = {
 
       if (!querySnapshot.empty) {
         throw new Error(
-          "You already have a costume submission. Please edit or delete it first."
+          "You already have a costume submission. Please edit or delete it first.",
         );
       }
 
@@ -84,7 +84,7 @@ export const CostumeService = {
         appSettings.revoteExcludedUserIds?.includes(userId)
       ) {
         throw new Error(
-          "You cannot vote in the revote as you are one of the tied contestants."
+          "You cannot vote in the revote as you are one of the tied contestants.",
         );
       }
 

@@ -56,7 +56,7 @@ export const AppProvider = ({ children }) => {
             // Force them to log out and log back in
             if (lastReset && userLastLogin && userLastLogin < lastReset) {
               logger.log(
-                "User account was deleted in reset. Forcing re-authentication."
+                "User account was deleted in reset. Forcing re-authentication.",
               );
               await signOut(auth);
               setUser(null);
@@ -74,13 +74,13 @@ export const AppProvider = ({ children }) => {
               lastLogin: new Date(),
             });
             setIsAdmin(
-              userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email)
+              userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
             );
           } else {
             // User document doesn't exist - create new user document
             // This handles both new registrations and post-reset logins
             logger.log(
-              "User document not found. Creating new user document..."
+              "User document not found. Creating new user document...",
             );
             const newUser = {
               uid: fbUser.uid,
@@ -122,7 +122,7 @@ export const AppProvider = ({ children }) => {
         if (!snapshot.exists()) {
           // User document was deleted - force logout immediately
           logger.log(
-            "User document deleted (contest reset detected). Forcing logout..."
+            "User document deleted (contest reset detected). Forcing logout...",
           );
           await signOut(auth);
           setUser(null);
@@ -131,7 +131,7 @@ export const AppProvider = ({ children }) => {
       },
       (error) => {
         logger.error("Error listening to user document:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -180,7 +180,7 @@ export const AppProvider = ({ children }) => {
 
         // Find user's own costume
         const userCostume = costumesData.find(
-          (costume) => costume.userId === user.uid
+          (costume) => costume.userId === user.uid,
         );
         setUserCostume(userCostume || null);
       },
@@ -188,7 +188,7 @@ export const AppProvider = ({ children }) => {
         console.error("Error listening to costumes:", error);
         setCostumes([]);
         setUserCostume(null);
-      }
+      },
     );
 
     // Listen to votes
@@ -211,7 +211,7 @@ export const AppProvider = ({ children }) => {
         console.error("Error listening to votes:", error);
         setVotes([]);
         setCurrentUserVote(null);
-      }
+      },
     );
 
     return () => {
@@ -286,7 +286,7 @@ export const AppProvider = ({ children }) => {
       appSettings,
       isAdmin,
       costumeResults,
-    ]
+    ],
   );
 
   return (

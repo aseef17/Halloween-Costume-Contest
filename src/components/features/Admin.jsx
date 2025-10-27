@@ -594,7 +594,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id
+                                  (vote) => vote.costumeId === costume.id,
                                 ).length
                               }
                             </span>
@@ -622,7 +622,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id
+                              (vote) => vote.costumeId === costume.id,
                             ).length
                           }{" "}
                           votes

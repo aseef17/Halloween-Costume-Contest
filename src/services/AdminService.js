@@ -186,7 +186,7 @@ export const AdminService = {
           // Start revote automatically (this sets votingEnabled: true and resultsVisible: true)
           await this.startRevote(
             firstPlaceTie.map((costume) => costume.id),
-            excludedUserIds
+            excludedUserIds,
           );
 
           return {
@@ -284,7 +284,7 @@ export const AdminService = {
         logger.log(`   Committing ${batches.length} batch(es)...`);
         await Promise.all(batches.map((batch) => batch.commit()));
         logger.log(
-          `✅ Deleted ${usersCount} users (will be recreated on next login)`
+          `✅ Deleted ${usersCount} users (will be recreated on next login)`,
         );
       } else {
         logger.log("✅ No users to delete");
