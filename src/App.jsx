@@ -6,7 +6,7 @@ import AuthRouter from "./components/features/AuthRouter";
 import FloatingHalloweenIcons from "./components/layout/FloatingHalloweenIcons";
 import { Toaster } from "./components/ui/Toaster";
 import ErrorBoundary from "./components/ui/ErrorBoundary";
-import NotificationBanner from "./components/ui/NotificationBanner";
+import NotificationModal from "./components/ui/NotificationModal";
 import { Loader2 } from "lucide-react";
 import halloweenBackgroundAnimation from "./assets/lottie/halloween-background.json";
 
@@ -87,7 +87,7 @@ const App = () => {
                 animate={{ opacity: 1 }}
                 className="relative z-10 flex flex-col items-center justify-center w-full min-h-screen"
               >
-                <NotificationBanner />
+                <NotificationModal />
                 <AuthRouter />
               </motion.div>
             )}

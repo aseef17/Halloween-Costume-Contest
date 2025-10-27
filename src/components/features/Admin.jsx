@@ -191,11 +191,14 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
 
-      if (unvoted.length > 0) {
-        setUnvotedUsers(unvoted);
+      // Filter out the current admin user from notifications
+      const unvotedNonAdmins = unvoted.filter((u) => u.uid !== user?.uid);
+
+      if (unvotedNonAdmins.length > 0) {
+        setUnvotedUsers(unvotedNonAdmins);
         setShowUnvotedUsersModal(true);
       } else {
         // No unvoted users, proceed with closing voting
@@ -216,11 +219,14 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        true,
+        true
       );
 
-      if (unvoted.length > 0) {
-        setUnvotedUsers(unvoted);
+      // Filter out the current admin user from notifications
+      const unvotedNonAdmins = unvoted.filter((u) => u.uid !== user?.uid);
+
+      if (unvotedNonAdmins.length > 0) {
+        setUnvotedUsers(unvotedNonAdmins);
         setShowUnvotedUsersModal(true);
       } else {
         // No unvoted users, proceed with ending revote
@@ -242,7 +248,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         : "voting_reminder";
       await NotificationService.sendVotingReminders(
         usersToNotify,
-        notificationType,
+        notificationType
       );
 
       adminToasts.votingEnabled(); // Success message for reminders sent
@@ -281,9 +287,12 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
-      setUnvotedUsers(unvoted);
+
+      // Filter out the current admin user from notifications
+      const unvotedNonAdmins = unvoted.filter((u) => u.uid !== user?.uid);
+      setUnvotedUsers(unvotedNonAdmins);
     } catch (error) {
       logger.error("Error refetching unvoted users:", error);
     } finally {
@@ -848,7 +857,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id,
+                                  (vote) => vote.costumeId === costume.id
                                 ).length
                               }
                             </span>
@@ -876,7 +885,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id,
+                              (vote) => vote.costumeId === costume.id
                             ).length
                           }{" "}
                           votes
