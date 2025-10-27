@@ -1,14 +1,9 @@
-import { useContext } from "react";
-import AppContext from "../AppContext";
+import { useApp as useCombinedApp } from "../contexts/CombinedContext";
 
 /**
  * Custom hook to use the app context
- * Separated from AppContext.jsx to avoid fast refresh warnings
+ * Uses the new separated context structure
  */
 export function useApp() {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
-  return context;
+  return useCombinedApp();
 }

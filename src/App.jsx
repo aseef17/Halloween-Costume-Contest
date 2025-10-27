@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Lottie from "lottie-react";
-import { AppProvider } from "./AppContext";
+import { AppProvider } from "./contexts/CombinedContext";
 import AuthRouter from "./components/features/AuthRouter";
 import FloatingHalloweenIcons from "./components/layout/FloatingHalloweenIcons";
 import { Toaster } from "./components/ui/Toaster";

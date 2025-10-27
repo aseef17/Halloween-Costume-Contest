@@ -5,7 +5,7 @@ import CostumeCard from "./CostumeCard";
 import { useApp } from "../../hooks/useApp";
 
 const RevoteSection = ({ costumes }) => {
-  const { currentUserVote, appSettings, user } = useApp();
+  const { appSettings, user, revoteVotes } = useApp();
 
   if (!costumes || costumes.length === 0) {
     return null;
@@ -19,8 +19,11 @@ const RevoteSection = ({ costumes }) => {
   // Check if user can vote (verified email and not excluded)
   const canUserVote = user?.emailVerified && !isUserExcluded;
 
-  // Get user's current revote vote
-  const userRevoteVote = currentUserVote;
+  // Get user's current revote vote directly from revoteVotes
+  const userRevoteVote =
+    user?.uid && revoteVotes
+      ? revoteVotes.find((vote) => vote.voterId === user.uid) || null
+      : null;
 
   return (
     <motion.div
@@ -62,8 +65,8 @@ const RevoteSection = ({ costumes }) => {
                 {!user?.emailVerified
                   ? "Please verify your email address to participate in voting."
                   : isUserExcluded
-                    ? "You're one of the tied contestants, so you cannot participate in the revote."
-                    : "The admin has initiated a revote to break the first place tie. Vote for your favorite among the tied costumes."}
+                  ? "You're one of the tied contestants, so you cannot participate in the revote."
+                  : "The admin has initiated a revote to break the first place tie. Vote for your favorite among the tied costumes."}
               </p>
             </div>
             <Sparkles className="hidden sm:block w-5 h-5 text-yellow-400 animate-pulse" />

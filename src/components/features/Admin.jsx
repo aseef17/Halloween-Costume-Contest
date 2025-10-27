@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Trophy,
   Loader2,
+  Vote,
 } from "lucide-react";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -30,7 +31,8 @@ import { useAdminOperations } from "../../hooks/useAsyncOperations";
 import { adminToasts, promiseToast } from "../../utils/toastUtils";
 
 const Admin = ({ onSwitchToDashboard }) => {
-  const { user, costumes, votes, appSettings, costumeResults } = useApp();
+  const { user, costumes, votes, revoteVotes, appSettings, costumeResults } =
+    useApp();
   const [showResetConfirmation, setShowResetConfirmation] = useState(false);
 
   const {
@@ -44,11 +46,13 @@ const Admin = ({ onSwitchToDashboard }) => {
     closeVotingWithAutoRevote,
   } = useAdminOperations();
 
-  const userCount = costumes.reduce((count, costume) => {
-    return count + (costume.userId ? 1 : 0);
-  }, 0);
+  const userCount =
+    costumes?.reduce((count, costume) => {
+      return count + (costume.userId ? 1 : 0);
+    }, 0) || 0;
 
-  const voteCount = votes.length;
+  const voteCount = votes?.length || 0;
+  const revoteVoteCount = revoteVotes?.length || 0;
 
   const handleToggleVoting = async () => {
     try {
@@ -262,6 +266,28 @@ const Admin = ({ onSwitchToDashboard }) => {
             </div>
           </div>
         </Card>
+
+        {/* Revote Votes Card */}
+        {appSettings.revoteMode && (
+          <Card className="overflow-hidden backdrop-blur-xl bg-gradient-to-br from-black/60 via-gray-900/60 to-purple-900/40 border-purple-500/30 hover:border-purple-500/50 transition-colors">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative p-5 sm:p-6">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-2">
+                    Revote Votes
+                  </p>
+                  <h3 className="text-4xl sm:text-5xl font-bold text-purple-300">
+                    {revoteVoteCount}
+                  </h3>
+                </div>
+                <div className="p-3 rounded-full bg-purple-500/20 backdrop-blur-sm">
+                  <Vote className="h-7 w-7 sm:h-8 sm:w-8 text-purple-400" />
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card className="overflow-hidden backdrop-blur-xl bg-gradient-to-br from-black/60 via-gray-900/60 to-green-900/40 border-green-500/30 hover:border-green-500/50 transition-colors sm:col-span-2 lg:col-span-1">
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
@@ -704,7 +730,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id,
+                                  (vote) => vote.costumeId === costume.id
                                 ).length
                               }
                             </span>
@@ -732,7 +758,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id,
+                              (vote) => vote.costumeId === costume.id
                             ).length
                           }{" "}
                           votes
