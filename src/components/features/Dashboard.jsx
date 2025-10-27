@@ -27,6 +27,7 @@ import Card from "../ui/Card";
 import CostumeCard from "./CostumeCard";
 import CostumeForm from "./CostumeForm";
 import VotingSection from "./VotingSection";
+import RevoteSection from "./RevoteSection";
 import ResultsSection from "./ResultsSection";
 import RevoteNotificationModal from "./RevoteNotificationModal";
 import HalloweenIcon from "../layout/HalloweenIcon";
@@ -838,6 +839,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       {appSettings.votingEnabled && votableCostumes.length > 0 ? (
         isLoadingVoting ? (
           <VotingSectionSkeleton />
+        ) : appSettings.revoteMode ? (
+          <RevoteSection costumes={votableCostumes} />
         ) : (
           <VotingSection costumes={votableCostumes} />
         )
