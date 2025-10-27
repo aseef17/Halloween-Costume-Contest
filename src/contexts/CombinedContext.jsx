@@ -35,16 +35,16 @@ export const useApp = () => {
 
     // In revote mode, check revote votes
     if (settings.appSettings.revoteMode) {
-      return (
+      const revoteVote =
         costumes.revoteVotes.find((vote) => vote.voterId === auth.user.uid) ||
-        null
-      );
+        null;
+      return revoteVote;
     }
 
     // In normal mode, check regular votes
-    return (
-      costumes.votes.find((vote) => vote.voterId === auth.user.uid) || null
-    );
+    const normalVote =
+      costumes.votes.find((vote) => vote.voterId === auth.user.uid) || null;
+    return normalVote;
   }, [
     auth.user?.uid,
     costumes.votes,

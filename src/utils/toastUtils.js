@@ -90,7 +90,9 @@ export const adminToasts = {
   resetError: () =>
     halloweenToast.error("Failed to reset contest. Please try again 👻"),
   revoteError: () =>
-    halloweenToast.error("Failed to manage tie breaker vote. Please try again 👻"),
+    halloweenToast.error(
+      "Failed to manage tie breaker vote. Please try again 👻",
+    ),
 };
 
 export const authToasts = {
@@ -182,7 +184,8 @@ export const promiseToast = {
   revoteStart: (promise) => {
     return toast.promise(promise, {
       loading: "Starting tie breaker vote... 🔄",
-      success: "Tie breaker vote started! Users can now vote for the tied costumes! 🏆",
+      success:
+        "Tie breaker vote started! Users can now vote for the tied costumes! 🏆",
       error: "Failed to start tie breaker vote. Try again! 👻",
     });
   },
