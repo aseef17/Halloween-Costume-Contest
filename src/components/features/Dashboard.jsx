@@ -60,13 +60,24 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     // If in revote mode, only show the tied costumes
     if (appSettings.revoteMode && appSettings.revoteCostumeIds?.length > 0) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
-      filtered = costumes.filter(
-        (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid,
+      // BUT if there's only one costume total, allow voting for it
+      const otherCostumes = costumes.filter(
+        (costume) => costume.userId !== user?.uid
       );
+
+      if (otherCostumes.length === 0 && costumes.length === 1) {
+        // Only one costume exists (user's own) - allow voting for it
+        filtered = costumes;
+      } else {
+        // Multiple costumes exist - apply normal filtering
+        filtered = costumes.filter(
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
+        );
+      }
     }
 
     return shuffleArray(filtered);
@@ -223,7 +234,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -310,7 +321,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all",
                       appSettings.votingEnabled
                         ? "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900"
-                        : "bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900",
+                        : "bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
                     )}
                   >
                     {appSettings.votingEnabled ? (
@@ -334,7 +345,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all",
                       appSettings.resultsVisible
                         ? "bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900"
-                        : "bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900",
+                        : "bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
                     )}
                   >
                     {appSettings.resultsVisible ? (
@@ -416,8 +427,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -426,7 +437,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -439,7 +450,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -641,10 +652,25 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               No Costumes to Vote On
             </h3>
             <p className="text-sm sm:text-base text-gray-400 max-w-md mx-auto">
-              There are no other costumes to vote for at the moment.
-              {!userCostume &&
-                " You can still add your own costume if submissions are open!"}
+              {costumes.length === 0
+                ? "No costumes have been submitted yet. Be the first to add one!"
+                : costumes.length === 1 && costumes[0]?.userId === user?.uid
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
+            {costumes.length === 0 && !appSettings.votingEnabled && (
+              <div className="mt-4">
+                <Button
+                  onClick={() => setShowAddCostume(true)}
+                  variant="default"
+                  animation="haunted"
+                  className="flex items-center gap-2 mx-auto py-3 px-6"
+                >
+                  <PlusCircle className="h-5 w-5" />
+                  <span className="font-semibold">Add Your Costume</span>
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
       )}

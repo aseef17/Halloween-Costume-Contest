@@ -34,10 +34,19 @@ export const AdminService = {
   async toggleVoting(enabled) {
     try {
       const settingsRef = doc(db, "appSettings", "settings");
-      await updateDoc(settingsRef, {
+      const updateData = {
         votingEnabled: enabled,
         lastUpdated: serverTimestamp(),
-      });
+      };
+
+      // If disabling voting, also clear revote fields
+      if (!enabled) {
+        updateData.revoteMode = false;
+        updateData.revoteCostumeIds = [];
+        updateData.revoteExcludedUserIds = [];
+      }
+
+      await updateDoc(settingsRef, updateData);
       return true;
     } catch (error) {
       console.error("Error toggling voting:", error);
@@ -166,7 +175,7 @@ export const AdminService = {
           // Start revote automatically
           await this.startRevote(
             firstPlaceTie.map((costume) => costume.id),
-            excludedUserIds,
+            excludedUserIds
           );
 
           return {
@@ -268,7 +277,7 @@ export const AdminService = {
         logger.log(`   Committing ${batches.length} batch(es)...`);
         await Promise.all(batches.map((batch) => batch.commit()));
         logger.log(
-          `✅ Deleted ${usersCount} users (will be recreated on next login)`,
+          `✅ Deleted ${usersCount} users (will be recreated on next login)`
         );
       } else {
         logger.log("✅ No users to delete");
