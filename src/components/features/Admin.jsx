@@ -35,9 +35,11 @@ const Admin = ({ onSwitchToDashboard }) => {
     toggleVoting,
     toggleResults,
     toggleSelfVote,
+    toggleAutoRevote,
     resetContest,
     startRevote,
     endRevote,
+    closeVotingWithAutoRevote,
   } = useAdminOperations();
 
   const userCount = costumes.reduce((count, costume) => {
@@ -48,11 +50,18 @@ const Admin = ({ onSwitchToDashboard }) => {
 
   const handleToggleVoting = async () => {
     try {
-      await toggleVoting(!appSettings.votingEnabled);
-      if (!appSettings.votingEnabled) {
-        adminToasts.votingEnabled();
+      if (appSettings.votingEnabled) {
+        // Closing voting - check for auto-revote
+        const result = await closeVotingWithAutoRevote(costumeResults);
+        if (result.autoRevoteTriggered) {
+          adminToasts.autoRevoteTriggered();
+        } else {
+          adminToasts.votingDisabled();
+        }
       } else {
-        adminToasts.votingDisabled();
+        // Opening voting
+        await toggleVoting(true);
+        adminToasts.votingEnabled();
       }
     } catch (error) {
       // Error is handled by the hook
@@ -85,6 +94,20 @@ const Admin = ({ onSwitchToDashboard }) => {
     } catch (error) {
       // Error is handled by the hook
       console.error("Error toggling self-vote:", error);
+    }
+  };
+
+  const handleToggleAutoRevote = async () => {
+    try {
+      await toggleAutoRevote(!appSettings.autoRevoteEnabled);
+      if (!appSettings.autoRevoteEnabled) {
+        adminToasts.autoRevoteEnabled();
+      } else {
+        adminToasts.autoRevoteDisabled();
+      }
+    } catch (error) {
+      // Error is handled by the hook
+      console.error("Error toggling auto-revote:", error);
     }
   };
 
@@ -124,7 +147,8 @@ const Admin = ({ onSwitchToDashboard }) => {
 
     try {
       const tiedIds = tiedCostumes.map((c) => c.id);
-      await promiseToast.revoteStart(startRevote(tiedIds));
+      const excludedIds = tiedCostumes.map((c) => c.userId).filter(Boolean);
+      await promiseToast.revoteStart(startRevote(tiedIds, excludedIds));
     } catch (error) {
       adminToasts.revoteError();
       console.error("Error starting revote:", error);
@@ -421,6 +445,34 @@ const Admin = ({ onSwitchToDashboard }) => {
                   </p>
                 )}
               </div>
+
+              {/* Auto-Revote Toggle */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-black/40 to-purple-900/20 border border-purple-500/20">
+                <h3 className="text-base sm:text-lg font-semibold text-orange-300 mb-2 flex items-center gap-2">
+                  <RotateCcw className="h-5 w-5" />
+                  Auto-Revote on Tie
+                </h3>
+                <p className="text-gray-400 text-xs sm:text-sm mb-4 leading-relaxed">
+                  {appSettings.autoRevoteEnabled
+                    ? "Automatically start revote when voting closes and there's a first-place tie."
+                    : "Manual revote control - admin must manually start revote when ties occur."}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">
+                    {appSettings.autoRevoteEnabled ? "Enabled" : "Disabled"}
+                  </span>
+                  <Switch
+                    checked={appSettings.autoRevoteEnabled || false}
+                    onCheckedChange={handleToggleAutoRevote}
+                    disabled={isAdminLoading}
+                  />
+                </div>
+                {isAdminLoading && (
+                  <p className="text-xs text-gray-500 mt-3 text-center">
+                    Updating...
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Revote Section - Show when there's a first place tie */}
@@ -488,53 +540,57 @@ const Admin = ({ onSwitchToDashboard }) => {
               )}
 
             {/* Revote Mode Active */}
-            {appSettings.revoteMode && (
-              <div className="border-t border-orange-500/20 my-6 pt-6">
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-900/20 to-black/40 border border-purple-500/30">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-base sm:text-lg font-semibold text-orange-300 mb-2 flex items-center gap-2">
-                        <RotateCcw className="h-5 w-5 text-purple-400 animate-spin" />
-                        Revote Mode Active
-                      </h3>
-                      <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-2">
-                        A revote is currently in progress for first place ties
-                        only.
-                      </p>
-                      <p className="text-purple-400 text-xs sm:text-sm font-semibold">
-                        🔄 Users can now vote again for the tied costumes.
-                      </p>
+            {appSettings.revoteMode &&
+              appSettings.revoteCostumeIds &&
+              appSettings.revoteCostumeIds.length > 0 &&
+              costumes.length > 0 &&
+              appSettings.votingEnabled && (
+                <div className="border-t border-orange-500/20 my-6 pt-6">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-900/20 to-black/40 border border-purple-500/30">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-base sm:text-lg font-semibold text-orange-300 mb-2 flex items-center gap-2">
+                          <RotateCcw className="h-5 w-5 text-purple-400 animate-spin" />
+                          Revote Mode Active
+                        </h3>
+                        <p className="text-gray-400 text-xs sm:text-sm leading-relaxed mb-2">
+                          A revote is currently in progress for first place ties
+                          only.
+                        </p>
+                        <p className="text-purple-400 text-xs sm:text-sm font-semibold">
+                          🔄 Users can now vote again for the tied costumes.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleEndRevote}
+                        disabled={isAdminLoading}
+                        className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 w-full sm:w-auto rounded-xl py-2.5 px-5"
+                      >
+                        {isAdminLoading ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 1,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                            >
+                              <RefreshCw className="h-5 w-5" />
+                            </motion.div>
+                            Ending...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-5 w-5" />
+                            End Revote
+                          </>
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      onClick={handleEndRevote}
-                      disabled={isAdminLoading}
-                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 w-full sm:w-auto rounded-xl py-2.5 px-5"
-                    >
-                      {isAdminLoading ? (
-                        <>
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              ease: "linear",
-                            }}
-                          >
-                            <RefreshCw className="h-5 w-5" />
-                          </motion.div>
-                          Ending...
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-5 w-5" />
-                          End Revote
-                        </>
-                      )}
-                    </Button>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div className="border-t border-orange-500/20 my-6 pt-6">
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-red-900/20 to-black/40 border border-red-500/30">
@@ -545,10 +601,12 @@ const Admin = ({ onSwitchToDashboard }) => {
                       Reset Contest
                     </h3>
                     <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">
-                      This will delete all costumes, votes, ALL users, images, and reset contest settings.
+                      This will delete all costumes, votes, ALL users, images,
+                      and reset contest settings.
                     </p>
                     <p className="text-red-400 text-xs sm:text-sm font-semibold mt-2">
-                      ⚠️ This action cannot be undone! Everyone (including admins) will need to log back in.
+                      ⚠️ This action cannot be undone! Everyone (including
+                      admins) will need to log back in.
                     </p>
                   </div>
                   {!showConfirmReset ? (

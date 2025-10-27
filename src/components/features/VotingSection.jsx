@@ -5,13 +5,28 @@ import CostumeCard from "./CostumeCard";
 import { useApp } from "../../hooks/useApp";
 
 const VotingSection = ({ costumes }) => {
-  const { currentUserVote, appSettings } = useApp();
+  const { currentUserVote, appSettings, user } = useApp();
 
   if (!costumes || costumes.length === 0) {
     return null;
   }
 
   const hasVoted = !!currentUserVote;
+
+  // Filter costumes during revote mode
+  const filteredCostumes = appSettings.revoteMode
+    ? costumes.filter((costume) =>
+        appSettings.revoteCostumeIds?.includes(costume.id),
+      )
+    : costumes;
+
+  // Check if user is excluded from revote
+  const isUserExcluded =
+    appSettings.revoteMode &&
+    appSettings.revoteExcludedUserIds?.includes(user?.uid);
+
+  // Check if user can vote (verified email and not excluded)
+  const canUserVote = user?.emailVerified && !isUserExcluded;
 
   return (
     <motion.div
@@ -30,10 +45,16 @@ const VotingSection = ({ costumes }) => {
           <Info className="w-4 h-4 text-purple-400" />
           <span className="text-sm text-gray-300 font-medium">
             {appSettings.revoteMode
-              ? "Breaking the tie"
-              : hasVoted
-                ? "You can change your vote"
-                : "Pick your favorite"}
+              ? !user?.emailVerified
+                ? "Email verification required"
+                : isUserExcluded
+                  ? "You're excluded from revote"
+                  : "Breaking the tie"
+              : !user?.emailVerified
+                ? "Email verification required"
+                : hasVoted
+                  ? "You can change your vote"
+                  : "Pick your favorite"}
           </span>
         </div>
       </div>
@@ -56,8 +77,11 @@ const VotingSection = ({ costumes }) => {
                   Revote in Progress!
                 </p>
                 <p className="text-xs sm:text-sm text-yellow-300/80">
-                  The admin has initiated a revote to break the first place tie.
-                  Vote for your favorite among the tied costumes.
+                  {!user?.emailVerified
+                    ? "Please verify your email address to participate in voting."
+                    : isUserExcluded
+                      ? "You're one of the tied contestants, so you cannot participate in the revote."
+                      : "The admin has initiated a revote to break the first place tie. Vote for your favorite among the tied costumes."}
                 </p>
               </div>
               <Sparkles className="hidden sm:block w-5 h-5 text-yellow-400 animate-pulse" />
@@ -106,14 +130,14 @@ const VotingSection = ({ costumes }) => {
       </div>
 
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {costumes.map((costume, index) => (
+        {filteredCostumes.map((costume, index) => (
           <motion.div
             key={costume.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <CostumeCard costume={costume} showVoteButton={true} />
+            <CostumeCard costume={costume} showVoteButton={canUserVote} />
           </motion.div>
         ))}
       </div>
