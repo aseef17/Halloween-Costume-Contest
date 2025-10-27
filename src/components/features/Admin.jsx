@@ -332,7 +332,7 @@ const Admin = ({ onSwitchToDashboard }) => {
 
             {/* Phase Progress Indicator */}
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
                 {/* Contest Active */}
                 <div
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
@@ -704,7 +704,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id,
+                                  (vote) => vote.costumeId === costume.id
                                 ).length
                               }
                             </span>
@@ -732,7 +732,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id,
+                              (vote) => vote.costumeId === costume.id
                             ).length
                           }{" "}
                           votes

@@ -10,8 +10,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import { ref, listAll, deleteObject } from "firebase/storage";
-import { db, storage, auth } from "../firebaseConfig";
-import { signOut } from "firebase/auth";
+import { db, storage } from "../firebaseConfig";
 import logger from "../utils/logger";
 
 // Helper function to detect first place ties
@@ -23,6 +22,29 @@ const detectFirstPlaceTie = (costumeResults) => {
     return firstPlace;
   }
   return null;
+};
+
+// Helper function to commit batch with retry logic
+const commitBatchWithRetry = async (batch, operationName, maxRetries = 3) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await batch.commit();
+      return true;
+    } catch (error) {
+      logger.error(
+        `Error committing ${operationName} batch (attempt ${attempt}/${maxRetries}):`,
+        error
+      );
+
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      // Wait before retry (exponential backoff)
+      const delay = Math.pow(2, attempt) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
 };
 
 export const AdminService = {
@@ -144,8 +166,8 @@ export const AdminService = {
         revotesSnapshot.forEach((revoteDoc) => {
           batch.delete(doc(db, "revotes", revoteDoc.id));
         });
-        await batch.commit();
-        logger.log(`Cleared ${revotesSnapshot.size} revote votes`);
+        await commitBatchWithRetry(batch, "revote votes clearing");
+        logger.log(`✅ Cleared ${revotesSnapshot.size} revote votes`);
       }
 
       // Update settings to disable revote mode
@@ -185,12 +207,12 @@ export const AdminService = {
       // Get all revote votes
       const revotesSnapshot = await getDocs(collection(db, "revotes"));
       const revoteVoters = revotesSnapshot.docs.map(
-        (doc) => doc.data().voterId,
+        (doc) => doc.data().voterId
       );
 
       // Check if all eligible voters have voted
       const allVoted = eligibleVoters.every((voterId) =>
-        revoteVoters.includes(voterId),
+        revoteVoters.includes(voterId)
       );
 
       return {
@@ -198,7 +220,7 @@ export const AdminService = {
         eligibleVoters: eligibleVoters.length,
         votedVoters: revoteVoters.length,
         remainingVoters: eligibleVoters.filter(
-          (voterId) => !revoteVoters.includes(voterId),
+          (voterId) => !revoteVoters.includes(voterId)
         ),
       };
     } catch (error) {
@@ -232,7 +254,7 @@ export const AdminService = {
           // Start revote automatically (this sets votingEnabled: true and resultsVisible: true)
           await AdminService.startRevote(
             firstPlaceTie.map((costume) => costume.id),
-            excludedUserIds,
+            excludedUserIds
           );
 
           return {
@@ -262,6 +284,8 @@ export const AdminService = {
     logger.log("Starting contest reset...");
 
     try {
+      // Add a small delay to ensure any pending operations complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Step 1: Delete all votes
       logger.log("Deleting votes...");
       const votesSnapshot = await getDocs(collection(db, "votes"));
@@ -272,7 +296,7 @@ export const AdminService = {
         votesSnapshot.forEach((voteDoc) => {
           votesBatch.delete(doc(db, "votes", voteDoc.id));
         });
-        await votesBatch.commit();
+        await commitBatchWithRetry(votesBatch, "votes deletion");
         logger.log(`✅ Deleted ${votesCount} votes`);
       } else {
         logger.log("✅ No votes to delete");
@@ -288,7 +312,7 @@ export const AdminService = {
         revotesSnapshot.forEach((revoteDoc) => {
           revotesBatch.delete(doc(db, "revotes", revoteDoc.id));
         });
-        await revotesBatch.commit();
+        await commitBatchWithRetry(revotesBatch, "revote votes deletion");
         logger.log(`✅ Deleted ${revotesCount} revote votes`);
       } else {
         logger.log("✅ No revote votes to delete");
@@ -304,7 +328,7 @@ export const AdminService = {
         costumesSnapshot.forEach((costumeDoc) => {
           costumesBatch.delete(doc(db, "costumes", costumeDoc.id));
         });
-        await costumesBatch.commit();
+        await commitBatchWithRetry(costumesBatch, "costumes deletion");
         logger.log(`✅ Deleted ${costumesCount} costumes`);
       } else {
         logger.log("✅ No costumes to delete");
@@ -333,7 +357,7 @@ export const AdminService = {
             // Keep: uid, email, displayName, role, emailVerified, createdAt, lastLogin
           });
           logger.log(
-            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`,
+            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`
           );
           operationCount++;
 
@@ -350,9 +374,15 @@ export const AdminService = {
           batches.push(currentBatch);
         }
 
-        // Commit all batches
-        logger.log(`   Committing ${batches.length} batch(es)...`);
-        await Promise.all(batches.map((batch) => batch.commit()));
+        // Commit all batches with retry logic
+        await Promise.all(
+          batches.map(async (batch, index) => {
+            await commitBatchWithRetry(
+              batch,
+              `user data clearing batch ${index + 1}`
+            );
+          })
+        );
         logger.log(`✅ Cleared contest data for ${usersCount} users`);
       } else {
         logger.log("✅ No users to update");
@@ -399,12 +429,7 @@ export const AdminService = {
         // Continue even if image deletion fails
       }
 
-      // Step 6: Sign out the current user
-      logger.log("🚪 Signing out current user...");
-      await signOut(auth);
-      logger.log("✅ User signed out");
-
-      logger.log("Contest reset completed successfully!");
+      logger.log("🎉 Contest reset completed successfully!");
       return true;
     } catch (error) {
       logger.error("❌ Error resetting contest:", error);

@@ -72,13 +72,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       appSettings.revoteCostumeIds.length > 0
     ) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
       // BUT if there's only one costume total, allow voting for it
       const otherCostumes = costumes.filter(
-        (costume) => costume.userId !== user?.uid,
+        (costume) => costume.userId !== user?.uid
       );
 
       if (otherCostumes.length === 0 && costumes.length === 1) {
@@ -87,8 +87,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       } else {
         // Multiple costumes exist - apply normal filtering
         filtered = costumes.filter(
-          (costume) =>
-            appSettings.allowSelfVote || costume.userId !== user?.uid,
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
         );
       }
     }
@@ -149,7 +148,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const handleCloseVotingAndShowResults = useCallback(async () => {
     try {
       const result = await promiseToast.closeVotingWithAutoRevote(
-        closeVotingWithAutoRevote(costumeResults),
+        closeVotingWithAutoRevote(costumeResults)
       );
       if (result.autoRevoteTriggered) {
         adminToasts.autoRevoteTriggered();
@@ -282,7 +281,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -362,7 +361,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   className="space-y-4"
                 >
                   {/* Phase Progress Indicator */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
                     {/* Contest Active */}
                     <div
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
@@ -619,8 +618,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -629,7 +628,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -642,7 +641,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -863,8 +862,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {costumes.length === 0
                 ? "No costumes have been submitted yet. Be the first to add one!"
                 : costumes.length === 1 && costumes[0]?.userId === user?.uid
-                  ? "You're the only one who has submitted a costume so far. Wait for others to join!"
-                  : "There are no other costumes to vote for at the moment."}
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
             {costumes.length === 0 && !appSettings.votingEnabled && (
               <div className="mt-4">
@@ -919,7 +918,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         }
         tiedCostumes={costumeResults.filter((costume) => costume.rank === 1)}
         isExcludedFromRevote={appSettings.revoteExcludedUserIds?.includes(
-          user?.uid,
+          user?.uid
         )}
         userCostume={userCostume}
       />
