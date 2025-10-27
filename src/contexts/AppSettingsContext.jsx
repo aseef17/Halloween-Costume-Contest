@@ -11,6 +11,10 @@ export const AppSettingsProvider = ({ children }) => {
     votingEnabled: false,
     resultsVisible: false,
     allowSelfVote: false,
+    autoRevoteEnabled: false,
+    revoteMode: false,
+    revoteCostumeIds: [],
+    revoteExcludedUserIds: [],
     contestActive: true,
     lastReset: null,
   });
@@ -27,6 +31,10 @@ export const AppSettingsProvider = ({ children }) => {
             votingEnabled: settingsData.votingEnabled || false,
             resultsVisible: settingsData.resultsVisible || false,
             allowSelfVote: settingsData.allowSelfVote || false,
+            autoRevoteEnabled: settingsData.autoRevoteEnabled || false,
+            revoteMode: settingsData.revoteMode || false,
+            revoteCostumeIds: settingsData.revoteCostumeIds || [],
+            revoteExcludedUserIds: settingsData.revoteExcludedUserIds || [],
             contestActive: settingsData.contestActive !== false,
             lastReset: settingsData.lastReset || null,
           });

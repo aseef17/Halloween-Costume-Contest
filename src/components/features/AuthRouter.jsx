@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { updateProfile, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  updateProfile,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  getRedirectResult,
+  applyActionCode,
+} from "firebase/auth";
 import { auth } from "../../firebaseConfig";
 import Login from "./Login";
 import Register from "./Register";
 import Dashboard from "./Dashboard";
 import Admin from "./Admin";
+import EmailVerification from "./EmailVerification";
 import { useApp } from "../../hooks/useApp";
 import { authToasts, halloweenToast } from "../../utils/toastUtils";
 
@@ -21,11 +28,89 @@ const AuthRouter = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Handle redirect result and email verification links on component mount
+  useEffect(() => {
+    const handleAuthActions = async () => {
+      console.log("🚀 AuthRouter: handleAuthActions called");
+      console.log("🚀 AuthRouter: Current URL:", window.location.href);
+
+      try {
+        // Handle Google sign-in redirect
+        const result = await getRedirectResult(auth);
+        if (result) {
+          console.log("🚀 AuthRouter: Google redirect result:", result);
+          authToasts.loginSuccess();
+        }
+
+        // Handle email verification link
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get("mode");
+        const actionCode = urlParams.get("oobCode");
+
+        console.log(
+          "🚀 AuthRouter: URL params - mode:",
+          mode,
+          "oobCode:",
+          actionCode,
+        );
+
+        if (mode === "verifyEmail" && actionCode) {
+          console.log("🚀 AuthRouter: Processing email verification...");
+          try {
+            await applyActionCode(auth, actionCode);
+            console.log("🚀 AuthRouter: Email verification successful");
+
+            // Force reload the current user to get updated verification status
+            if (auth.currentUser) {
+              console.log(
+                "🚀 AuthRouter: Reloading user after verification...",
+              );
+              await auth.currentUser.reload();
+              console.log(
+                "🚀 AuthRouter: User reloaded, emailVerified:",
+                auth.currentUser.emailVerified,
+              );
+
+              // Force a page reload to trigger fresh auth state
+              console.log(
+                "🚀 AuthRouter: Forcing page reload to update auth state...",
+              );
+              window.location.reload();
+            }
+          } catch (error) {
+            console.error("🚀 AuthRouter: Email verification failed:", error);
+            authToasts.loginError(error);
+          }
+        }
+      } catch (error) {
+        console.error("🚀 AuthRouter: Error handling auth actions:", error);
+        authToasts.loginError(error);
+      }
+    };
+
+    handleAuthActions();
+  }, []);
+
   // Update current view based on auth state
   useEffect(() => {
+    console.log("🚀 AuthRouter: View update triggered");
+    console.log("🚀 AuthRouter: user:", user);
+    console.log("🚀 AuthRouter: isAdmin:", isAdmin);
+
     if (user) {
-      setCurrentView(isAdmin ? "admin" : "dashboard");
+      console.log("🚀 AuthRouter: user.emailVerified:", user.emailVerified);
+      if (!user.emailVerified) {
+        console.log("🚀 AuthRouter: Redirecting to email-verification");
+        setCurrentView("email-verification");
+      } else {
+        console.log(
+          "🚀 AuthRouter: Redirecting to",
+          isAdmin ? "admin" : "dashboard",
+        );
+        setCurrentView(isAdmin ? "admin" : "dashboard");
+      }
     } else {
+      console.log("🚀 AuthRouter: No user, redirecting to login");
       setCurrentView("login");
     }
   }, [user, isAdmin]);
@@ -70,6 +155,9 @@ const AuthRouter = () => {
         displayName: name.trim(),
       });
 
+      // Send email verification
+      await sendEmailVerification(userCredential.user);
+
       // Reset form
       setName("");
       setEmail("");
@@ -86,33 +174,19 @@ const AuthRouter = () => {
     setError("");
 
     try {
-      const { GoogleAuthProvider, signInWithPopup } = await import(
+      const { GoogleAuthProvider, signInWithRedirect } = await import(
         "firebase/auth"
       );
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       console.error(error);
-
-      // Handle specific error cases with toast notifications
-      if (error.code === "auth/popup-closed-by-user") {
-        halloweenToast.error(
-          "Login Cancelled - You closed the Google sign-in popup. Please try again.",
-        );
-      } else if (error.code === "auth/cancelled-popup-request") {
-        halloweenToast.info("Login Cancelled - Please try again.");
-      } else if (error.code === "auth/popup-blocked") {
-        halloweenToast.error(
-          "Popup Blocked - Please allow popups for this site and try again.",
-        );
-      } else {
-        halloweenToast.error(
-          "Sign-in Failed - Google sign-in failed. Please try again.",
-        );
-        setError("Google sign-in failed. Please try again.");
-      }
+      halloweenToast.error(
+        "Sign-in Failed - Google sign-in failed. Please try again.",
+      );
+      setError("Google sign-in failed. Please try again.");
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   // Show loading state
@@ -123,6 +197,11 @@ const AuthRouter = () => {
         <p className="text-orange-300 text-xl">Haunting the login...</p>
       </div>
     );
+  }
+
+  // Email verification view
+  if (user && !user.emailVerified) {
+    return <EmailVerification userEmail={user.email} />;
   }
 
   // Not authenticated views

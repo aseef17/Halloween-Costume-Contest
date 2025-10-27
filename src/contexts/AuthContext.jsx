@@ -15,21 +15,49 @@ export const AuthProvider = ({ children }) => {
 
   // Listen for auth state changes
   useEffect(() => {
+    console.log("🔐 AuthContext: Setting up onAuthStateChanged listener");
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      console.log("🔐 AuthContext: onAuthStateChanged triggered");
+      console.log("🔐 AuthContext: fbUser exists:", !!fbUser);
+
       if (fbUser) {
+        console.log(
+          "🔐 AuthContext: fbUser.emailVerified BEFORE reload:",
+          fbUser.emailVerified,
+        );
+
+        // CRITICAL: Reload user to get latest verification status
+        // Firebase doesn't automatically update emailVerified in onAuthStateChanged
+        try {
+          await fbUser.reload();
+          console.log(
+            "🔐 AuthContext: fbUser.emailVerified AFTER reload:",
+            fbUser.emailVerified,
+          );
+        } catch (error) {
+          console.error("🔐 AuthContext: Error reloading user:", error);
+        }
+
         // Check if user exists in Firestore, if not create profile
         const userRef = doc(db, "users", fbUser.uid);
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
           const userData = userSnap.data();
-          setUser({
+          const userObj = {
             uid: fbUser.uid,
             email: fbUser.email,
             displayName: fbUser.displayName || userData.displayName || "",
             role: userData.role || "user",
+            emailVerified: fbUser.emailVerified,
             lastLogin: new Date(),
-          });
+          };
+          console.log("🔐 AuthContext: Setting user (existing):", userObj);
+          setUser(userObj);
+          console.log(
+            "🔐 AuthContext: User set, emailVerified:",
+            userObj.emailVerified,
+          );
           setIsAdmin(
             userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
           );
@@ -40,15 +68,22 @@ export const AuthProvider = ({ children }) => {
             email: fbUser.email,
             displayName: fbUser.displayName || "",
             role: "user",
+            emailVerified: fbUser.emailVerified,
             createdAt: new Date(),
             lastLogin: new Date(),
           };
 
           await setDoc(userRef, newUser);
+          console.log("🔐 AuthContext: Setting user (new):", newUser);
           setUser(newUser);
+          console.log(
+            "🔐 AuthContext: New user set, emailVerified:",
+            newUser.emailVerified,
+          );
           setIsAdmin(ADMIN_EMAILS.includes(fbUser.email));
         }
       } else {
+        console.log("🔐 AuthContext: No user, setting user to null");
         setUser(null);
         setIsAdmin(false);
       }

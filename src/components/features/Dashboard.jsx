@@ -16,6 +16,8 @@ import {
   RotateCcw,
   Trophy,
   Zap,
+  AlertCircle,
+  Mail,
 } from "lucide-react";
 import Lottie from "lottie-react";
 import Button from "../ui/Button";
@@ -174,6 +176,45 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       animate={{ opacity: 1 }}
       className="w-full max-w-6xl mx-auto px-4 py-6 sm:py-8"
     >
+      {/* Email Verification Banner */}
+      {user && !user.emailVerified && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Card className="overflow-hidden backdrop-blur-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/30">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative p-4 sm:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 p-2 rounded-full bg-yellow-500/20">
+                  <Mail className="w-6 h-6 text-yellow-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-yellow-300 font-semibold text-lg mb-2">
+                    Email Verification Required
+                  </h3>
+                  <p className="text-gray-300 text-sm mb-3">
+                    Please verify your email address to participate in the
+                    contest. Check your inbox (and spam folder) for a
+                    verification link.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex items-center gap-2 text-yellow-300 border-yellow-500/50 hover:bg-yellow-500/10"
+                      onClick={() => window.location.reload()}
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      Refresh After Verification
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
       {/* Header - Mobile optimized */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -426,17 +467,20 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               Your Costume
             </h2>
 
-            {!userCostume && !appSettings.votingEnabled && !showAddCostume && (
-              <Button
-                onClick={() => setShowAddCostume(true)}
-                variant="default"
-                animation="spooky"
-                className="flex items-center justify-center gap-2 py-2.5 sm:py-2 px-5 w-full sm:w-auto"
-              >
-                <PlusCircle className="h-5 w-5" />
-                <span className="font-semibold">Add Costume</span>
-              </Button>
-            )}
+            {!userCostume &&
+              !appSettings.votingEnabled &&
+              !showAddCostume &&
+              user?.emailVerified && (
+                <Button
+                  onClick={() => setShowAddCostume(true)}
+                  variant="default"
+                  animation="spooky"
+                  className="flex items-center justify-center gap-2 py-2.5 sm:py-2 px-5 w-full sm:w-auto"
+                >
+                  <PlusCircle className="h-5 w-5" />
+                  <span className="font-semibold">Add Costume</span>
+                </Button>
+              )}
           </div>
 
           {showAddCostume && (
@@ -511,7 +555,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                         : "Add your costume to join the Halloween contest!"}
                     </p>
 
-                    {!appSettings.votingEnabled && (
+                    {!appSettings.votingEnabled && user?.emailVerified && (
                       <Button
                         onClick={() => setShowAddCostume(true)}
                         variant="default"

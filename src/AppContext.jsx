@@ -35,6 +35,8 @@ export const AppProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         try {
+          // CRITICAL: Reload user to get latest verification status
+          await fbUser.reload();
           // First, check if there was a recent reset
           const settingsRef = doc(db, "appSettings", "settings");
           const settingsSnap = await getDoc(settingsRef);
@@ -53,7 +55,7 @@ export const AppProvider = ({ children }) => {
             // Force them to log out and log back in
             if (lastReset && userLastLogin && userLastLogin < lastReset) {
               logger.log(
-                "User account was deleted in reset. Forcing re-authentication."
+                "User account was deleted in reset. Forcing re-authentication.",
               );
               await signOut(auth);
               setUser(null);
@@ -67,6 +69,7 @@ export const AppProvider = ({ children }) => {
               email: fbUser.email,
               displayName: fbUser.displayName || userData.displayName || "",
               role: userData.role || "user",
+              emailVerified: fbUser.emailVerified,
               lastLogin: new Date(),
             });
             setIsAdmin(
@@ -76,13 +79,14 @@ export const AppProvider = ({ children }) => {
             // User document doesn't exist - create new user document
             // This handles both new registrations and post-reset logins
             logger.log(
-              "User document not found. Creating new user document..."
+              "User document not found. Creating new user document...",
             );
             const newUser = {
               uid: fbUser.uid,
               email: fbUser.email,
               displayName: fbUser.displayName || "",
               role: ADMIN_EMAILS.includes(fbUser.email) ? "admin" : "user",
+              emailVerified: fbUser.emailVerified,
               createdAt: new Date(),
               lastLogin: new Date(),
             };
@@ -117,7 +121,7 @@ export const AppProvider = ({ children }) => {
         if (!snapshot.exists()) {
           // User document was deleted - force logout immediately
           logger.log(
-            "User document deleted (contest reset detected). Forcing logout..."
+            "User document deleted (contest reset detected). Forcing logout...",
           );
           await signOut(auth);
           setUser(null);
@@ -126,7 +130,7 @@ export const AppProvider = ({ children }) => {
       },
       (error) => {
         logger.error("Error listening to user document:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
