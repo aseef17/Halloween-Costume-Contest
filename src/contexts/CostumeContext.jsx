@@ -28,7 +28,7 @@ export const CostumeProvider = ({ children }) => {
       (error) => {
         console.error("Error fetching costumes:", error);
         setIsLoadingCostumes(false);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -47,7 +47,7 @@ export const CostumeProvider = ({ children }) => {
       },
       (error) => {
         console.error("Error fetching votes:", error);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -57,8 +57,23 @@ export const CostumeProvider = ({ children }) => {
   const costumeResults = useMemo(() => {
     if (!costumes.length || !votes.length) return [];
 
-    // Create a vote count map for O(1) lookup instead of O(n) filtering
-    const voteCountMap = votes.reduce((acc, vote) => {
+    // Create vote count maps for initial and revote votes
+    const initialVoteCountMap = votes.reduce((acc, vote) => {
+      if (vote.isInitialVote) {
+        acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const revoteVoteCountMap = votes.reduce((acc, vote) => {
+      if (vote.isRevoteVote) {
+        acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    // Create total vote count map (for backward compatibility)
+    const totalVoteCountMap = votes.reduce((acc, vote) => {
       acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
       return acc;
     }, {});
@@ -66,7 +81,9 @@ export const CostumeProvider = ({ children }) => {
     return costumes
       .map((costume) => ({
         ...costume,
-        voteCount: voteCountMap[costume.id] || 0,
+        voteCount: totalVoteCountMap[costume.id] || 0,
+        initialVoteCount: initialVoteCountMap[costume.id] || 0,
+        revoteVoteCount: revoteVoteCountMap[costume.id] || 0,
       }))
       .sort((a, b) => b.voteCount - a.voteCount);
   }, [costumes, votes]);
@@ -92,7 +109,7 @@ export const CostumeProvider = ({ children }) => {
       isLoadingCostumes,
       setUserCostume,
       setCurrentUserVote,
-    ],
+    ]
   );
 
   return (

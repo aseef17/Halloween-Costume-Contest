@@ -23,7 +23,7 @@ export const AppSettingsProvider = ({ children }) => {
   // Listen for app settings changes
   useEffect(() => {
     const unsubscribe = onSnapshot(
-      doc(db, "settings", "app"),
+      doc(db, "appSettings", "settings"),
       (doc) => {
         if (doc.exists()) {
           const settingsData = doc.data();
@@ -44,7 +44,7 @@ export const AppSettingsProvider = ({ children }) => {
       (error) => {
         console.error("Error fetching app settings:", error);
         setIsLoadingSettings(false);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -57,7 +57,7 @@ export const AppSettingsProvider = ({ children }) => {
       isLoadingSettings,
       setAppSettings,
     }),
-    [appSettings, isLoadingSettings, setAppSettings],
+    [appSettings, isLoadingSettings, setAppSettings]
   );
 
   return (
@@ -72,7 +72,7 @@ export const useAppSettings = () => {
   const context = React.useContext(AppSettingsContext);
   if (!context) {
     throw new Error(
-      "useAppSettings must be used within an AppSettingsProvider",
+      "useAppSettings must be used within an AppSettingsProvider"
     );
   }
   return context;

@@ -18,6 +18,7 @@ import {
   Zap,
   AlertCircle,
   Mail,
+  RefreshCw,
 } from "lucide-react";
 import Lottie from "lottie-react";
 import Button from "../ui/Button";
@@ -46,9 +47,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const {
     isLoading: isAdminLoading,
     toggleVoting,
-    toggleResults,
-    startRevote,
-    endRevote,
+    closeVotingWithAutoRevote,
+    resetContest,
   } = useAdminOperations();
 
   // Memoized filtered costumes for voting
@@ -58,7 +58,11 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     let filtered;
 
     // If in revote mode, only show the tied costumes
-    if (appSettings.revoteMode && appSettings.revoteCostumeIds?.length > 0) {
+    if (
+      appSettings.revoteMode &&
+      appSettings.revoteCostumeIds &&
+      appSettings.revoteCostumeIds.length > 0
+    ) {
       filtered = costumes.filter((costume) =>
         appSettings.revoteCostumeIds.includes(costume.id)
       );
@@ -132,50 +136,29 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     }
   }, [appSettings.votingEnabled, toggleVoting]);
 
-  const handleToggleResults = useCallback(async () => {
+  // New simplified handlers for phase-based flow
+  const handleCloseVotingAndShowResults = useCallback(async () => {
     try {
-      await toggleResults(!appSettings.resultsVisible);
-      if (!appSettings.resultsVisible) {
-        adminToasts.resultsShown();
+      const result = await closeVotingWithAutoRevote(costumeResults);
+      if (result.autoRevoteTriggered) {
+        adminToasts.autoRevoteTriggered();
       } else {
-        adminToasts.resultsHidden();
+        adminToasts.votingDisabled();
+        adminToasts.resultsShown();
       }
     } catch (error) {
-      console.error("Error toggling results:", error);
+      console.error("Error closing voting and showing results:", error);
     }
-  }, [appSettings.resultsVisible, toggleResults]);
+  }, [closeVotingWithAutoRevote, costumeResults]);
 
-  const handleStartRevote = useCallback(async () => {
-    const firstPlaceTied = costumeResults.filter((c) => c.rank === 1);
-    if (firstPlaceTied.length > 1) {
-      try {
-        const tiedIds = firstPlaceTied.map((c) => c.id);
-        await promiseToast.revoteStart(startRevote(tiedIds));
-      } catch (error) {
-        adminToasts.revoteError();
-        console.error("Error starting revote:", error);
-      }
-    }
-  }, [costumeResults, startRevote]);
-
-  const handleEndRevote = useCallback(async () => {
+  const handleResetContest = useCallback(async () => {
     try {
-      await promiseToast.revoteEnd(endRevote());
+      await promiseToast.resetContest(resetContest());
     } catch (error) {
-      adminToasts.revoteError();
-      console.error("Error ending revote:", error);
+      adminToasts.resetError();
+      console.error("Error resetting contest:", error);
     }
-  }, [endRevote]);
-
-  // Check for first place ties
-  const firstPlaceTie = useMemo(() => {
-    if (!costumeResults || costumeResults.length < 2) return null;
-    const firstPlace = costumeResults.filter((c) => c.rank === 1);
-    if (firstPlace.length > 1 && firstPlace[0].voteCount > 0) {
-      return firstPlace;
-    }
-    return null;
-  }, [costumeResults]);
+  }, [resetContest]);
 
   // Loading states
   const isLoadingCostumes = !costumes.length;
@@ -278,7 +261,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         </div>
       </div>
 
-      {/* Quick Admin Controls - Only for admins */}
+      {/* Quick Admin Controls - Simplified Phase-Based */}
       {isAdmin && (
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -289,7 +272,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
           <Card className="overflow-hidden backdrop-blur-xl bg-gradient-to-br from-purple-900/40 via-gray-900/60 to-orange-900/40 border-purple-500/30">
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
             <div className="relative p-4">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Zap className="h-5 w-5 text-purple-400" />
                   <h3 className="text-lg font-semibold text-purple-300">
@@ -311,94 +294,189 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+                  className="space-y-4"
                 >
-                  {/* Toggle Voting */}
-                  <Button
-                    onClick={handleToggleVoting}
-                    disabled={isAdminLoading}
-                    className={cn(
-                      "flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all",
-                      appSettings.votingEnabled
-                        ? "bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900"
-                        : "bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900"
-                    )}
-                  >
-                    {appSettings.votingEnabled ? (
-                      <>
-                        <Pause className="h-4 w-4" />
-                        Close Voting
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-4 w-4" />
-                        Open Voting
-                      </>
-                    )}
-                  </Button>
+                  {/* Phase Progress Indicator */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                        !appSettings.votingEnabled &&
+                        !appSettings.resultsVisible
+                          ? "bg-green-500/20 border border-green-500/30"
+                          : "bg-gray-500/20 border border-gray-500/30"
+                      }`}
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          !appSettings.votingEnabled &&
+                          !appSettings.resultsVisible
+                            ? "bg-green-500"
+                            : "bg-gray-500"
+                        }`}
+                      />
+                      <span className="text-sm font-medium text-white">
+                        Contest Active
+                      </span>
+                    </div>
 
-                  {/* Toggle Results */}
-                  <Button
-                    onClick={handleToggleResults}
-                    disabled={isAdminLoading}
-                    className={cn(
-                      "flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all",
-                      appSettings.resultsVisible
-                        ? "bg-gradient-to-r from-orange-600 to-orange-800 hover:from-orange-700 hover:to-orange-900"
-                        : "bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900"
-                    )}
-                  >
-                    {appSettings.resultsVisible ? (
-                      <>
-                        <EyeOff className="h-4 w-4" />
-                        Hide Results
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4" />
-                        Show Results
-                      </>
-                    )}
-                  </Button>
+                    <div
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                        appSettings.votingEnabled && !appSettings.resultsVisible
+                          ? "bg-blue-500/20 border border-blue-500/30"
+                          : "bg-gray-500/20 border border-gray-500/30"
+                      }`}
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          appSettings.votingEnabled &&
+                          !appSettings.resultsVisible
+                            ? "bg-blue-500"
+                            : "bg-gray-500"
+                        }`}
+                      />
+                      <span className="text-sm font-medium text-white">
+                        Voting Enabled
+                      </span>
+                    </div>
 
-                  {/* Revote Controls */}
-                  {appSettings.revoteMode ? (
-                    <Button
-                      onClick={handleEndRevote}
-                      disabled={isAdminLoading}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                    <div
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                        !appSettings.votingEnabled && appSettings.resultsVisible
+                          ? "bg-purple-500/20 border border-purple-500/30"
+                          : "bg-gray-500/20 border border-gray-500/30"
+                      }`}
                     >
-                      <RotateCcw className="h-4 w-4" />
-                      End Revote
-                    </Button>
-                  ) : firstPlaceTie && firstPlaceTie.length > 1 ? (
-                    <Button
-                      onClick={handleStartRevote}
-                      disabled={isAdminLoading}
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl font-semibold bg-gradient-to-r from-yellow-600 to-yellow-800 hover:from-yellow-700 hover:to-yellow-900"
-                    >
-                      <Trophy className="h-4 w-4" />
-                      Start Revote
-                    </Button>
-                  ) : (
-                    <Button
-                      disabled
-                      className="flex items-center justify-center gap-2 py-3 rounded-xl font-semibold bg-gray-600/50 cursor-not-allowed"
-                    >
-                      <Trophy className="h-4 w-4" />
-                      No Tie
-                    </Button>
-                  )}
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          !appSettings.votingEnabled &&
+                          appSettings.resultsVisible
+                            ? "bg-purple-500"
+                            : "bg-gray-500"
+                        }`}
+                      />
+                      <span className="text-sm font-medium text-white">
+                        Results Shown
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Main Action Button */}
+                  <div className="text-center">
+                    {!appSettings.votingEnabled &&
+                    !appSettings.resultsVisible ? (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-3">
+                          Contest is active. Ready to start voting?
+                        </p>
+                        <Button
+                          onClick={() => handleToggleVoting(true)}
+                          disabled={isAdminLoading}
+                          className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                        >
+                          {isAdminLoading ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </motion.div>
+                              Starting...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-4 w-4" />
+                              Start Voting
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : appSettings.votingEnabled &&
+                      !appSettings.resultsVisible ? (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-3">
+                          Voting is active. Ready to close voting and show
+                          results?
+                        </p>
+                        <Button
+                          onClick={handleCloseVotingAndShowResults}
+                          disabled={isAdminLoading}
+                          className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700"
+                        >
+                          {isAdminLoading ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </motion.div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-4 w-4" />
+                              Close Voting & Show Results
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : !appSettings.votingEnabled &&
+                      appSettings.resultsVisible ? (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-3">
+                          Results are shown. Contest is complete. Ready to
+                          reset?
+                        </p>
+                        <Button
+                          onClick={handleResetContest}
+                          disabled={isAdminLoading}
+                          className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                        >
+                          {isAdminLoading ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                              >
+                                <RefreshCw className="h-4 w-4" />
+                              </motion.div>
+                              Resetting...
+                            </>
+                          ) : (
+                            <>
+                              <RotateCcw className="h-4 w-4" />
+                              Reset Contest
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
 
                   {/* Full Admin Panel */}
-                  <Button
-                    onClick={onSwitchToAdmin}
-                    variant="ghost"
-                    className="flex items-center justify-center gap-2 py-3 rounded-xl font-semibold border-2 border-purple-500/30 hover:bg-purple-900/20 text-purple-300"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Full Admin
-                  </Button>
+                  <div className="text-center pt-4 border-t border-purple-500/20">
+                    <Button
+                      onClick={onSwitchToAdmin}
+                      variant="ghost"
+                      className="flex items-center justify-center gap-2 mx-auto rounded-xl font-semibold border-2 border-purple-500/30 hover:bg-purple-900/20 text-purple-300"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Full Admin Panel
+                    </Button>
+                  </div>
                 </motion.div>
               )}
             </div>

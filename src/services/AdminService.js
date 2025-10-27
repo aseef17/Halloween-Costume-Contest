@@ -14,6 +14,17 @@ import { db, storage, auth } from "../firebaseConfig";
 import { signOut } from "firebase/auth";
 import logger from "../utils/logger";
 
+// Helper function to detect first place ties
+const detectFirstPlaceTie = (costumeResults) => {
+  if (!costumeResults || costumeResults.length < 2) return null;
+
+  const firstPlace = costumeResults.filter((costume) => costume.rank === 1);
+  if (firstPlace.length > 1 && firstPlace[0].voteCount > 0) {
+    return firstPlace;
+  }
+  return null;
+};
+
 export const AdminService = {
   // Update app settings
   async updateAppSettings(settings) {
@@ -104,10 +115,13 @@ export const AdminService = {
     try {
       const batch = writeBatch(db);
 
-      // Delete all existing votes
+      // Instead of deleting votes, mark them as initial votes
       const votesSnapshot = await getDocs(collection(db, "votes"));
       votesSnapshot.forEach((voteDoc) => {
-        batch.delete(doc(db, "votes", voteDoc.id));
+        batch.update(doc(db, "votes", voteDoc.id), {
+          isInitialVote: true,
+          isRevoteVote: false,
+        });
       });
 
       // Update settings to enable revote mode
@@ -152,14 +166,11 @@ export const AdminService = {
     try {
       const settingsRef = doc(db, "appSettings", "settings");
 
-      // First, close voting
-      await updateDoc(settingsRef, {
-        votingEnabled: false,
-        lastUpdated: serverTimestamp(),
-      });
-
-      // Check for first place ties
-      const firstPlaceTie = this.detectFirstPlaceTie(costumeResults);
+      // Check for first place ties first (only if we have costume results)
+      const firstPlaceTie =
+        costumeResults && costumeResults.length > 0
+          ? detectFirstPlaceTie(costumeResults)
+          : null;
 
       if (firstPlaceTie && firstPlaceTie.length > 1) {
         // Get current settings to check if auto-revote is enabled
@@ -172,7 +183,7 @@ export const AdminService = {
             .map((costume) => costume.userId)
             .filter(Boolean);
 
-          // Start revote automatically
+          // Start revote automatically (this sets votingEnabled: true and resultsVisible: true)
           await this.startRevote(
             firstPlaceTie.map((costume) => costume.id),
             excludedUserIds
@@ -186,22 +197,18 @@ export const AdminService = {
         }
       }
 
+      // No auto-revote or no tie - close voting and show results
+      await updateDoc(settingsRef, {
+        votingEnabled: false,
+        resultsVisible: true,
+        lastUpdated: serverTimestamp(),
+      });
+
       return { autoRevoteTriggered: false };
     } catch (error) {
       console.error("Error closing voting with auto-revote check:", error);
       throw error;
     }
-  },
-
-  // Helper method to detect first place ties
-  detectFirstPlaceTie(costumeResults) {
-    if (!costumeResults || costumeResults.length < 2) return null;
-
-    const firstPlace = costumeResults.filter((costume) => costume.rank === 1);
-    if (firstPlace.length > 1 && firstPlace[0].voteCount > 0) {
-      return firstPlace;
-    }
-    return null;
   },
 
   // Reset entire contest (clear votes, costumes, users, reset settings, delete images, and logout)

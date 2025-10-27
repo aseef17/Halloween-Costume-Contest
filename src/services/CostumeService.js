@@ -24,7 +24,7 @@ export const CostumeService = {
 
       if (!querySnapshot.empty) {
         throw new Error(
-          "You already have a costume submission. Please edit or delete it first.",
+          "You already have a costume submission. Please edit or delete it first."
         );
       }
 
@@ -84,7 +84,7 @@ export const CostumeService = {
         appSettings.revoteExcludedUserIds?.includes(userId)
       ) {
         throw new Error(
-          "You cannot vote in the revote as you are one of the tied contestants.",
+          "You cannot vote in the revote as you are one of the tied contestants."
         );
       }
 
@@ -107,6 +107,7 @@ export const CostumeService = {
         await updateDoc(doc(db, "votes", existingVote.id), {
           costumeId,
           timestamp: serverTimestamp(),
+          isRevoteVote: appSettings.revoteMode || false,
         });
         return { id: existingVote.id, costumeId, voterId: userId };
       }
@@ -116,6 +117,8 @@ export const CostumeService = {
         costumeId,
         voterId: userId,
         timestamp: serverTimestamp(),
+        isInitialVote: !appSettings.revoteMode,
+        isRevoteVote: appSettings.revoteMode || false,
       };
 
       const voteRef = await addDoc(collection(db, "votes"), newVote);
