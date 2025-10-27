@@ -38,6 +38,11 @@ const CostumeForm = ({ costume = null, userId, onSuccess, onCancel }) => {
       return;
     }
 
+    if (!imageUrl.trim()) {
+      setError("Costume image is required");
+      return;
+    }
+
     if (isUploadingImage) {
       setError("Please wait for image upload to complete");
       return;
@@ -120,7 +125,7 @@ const CostumeForm = ({ costume = null, userId, onSuccess, onCancel }) => {
 
         <div className="mb-6">
           <label className="block mb-2 text-sm font-medium text-orange-400">
-            Costume Image (Optional)
+            Costume Image <span className="text-red-400">*</span>
           </label>
           <ImageUpload
             currentImageUrl={imageUrl}
@@ -134,8 +139,8 @@ const CostumeForm = ({ costume = null, userId, onSuccess, onCancel }) => {
             className="mb-2"
           />
           <p className="text-xs text-gray-500">
-            Upload an image to showcase your costume. This will be visible to
-            other users.
+            Upload an image to showcase your costume. This is required and will
+            be visible to other users.
           </p>
         </div>
 

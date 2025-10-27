@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import { motion } from "motion/react";
 import {
   Sparkles,
@@ -7,8 +7,10 @@ import {
   Trash2,
   HelpCircle,
   CheckCircle2,
+  ZoomIn,
 } from "lucide-react";
 import Button from "../ui/Button";
+import ImageViewerModal from "../ui/ImageViewerModal";
 import CostumeService from "../../services/CostumeService";
 import { formatDate, cn } from "../../utils";
 import { useApp } from "../../hooks/useApp";
@@ -27,6 +29,7 @@ const CostumeCard = ({
 }) => {
   const { user, appSettings, currentUserVote } = useApp();
   const { isLoading, voteForCostume, deleteCostume } = useCostumeOperations();
+  const [showImageViewer, setShowImageViewer] = useState(false);
 
   // Memoized computed values
   const computedValues = useMemo(() => {
@@ -183,12 +186,28 @@ const CostumeCard = ({
 
           {/* Costume Image */}
           {costume.imageUrl && (
-            <div className="mb-4 rounded-xl overflow-hidden border-2 border-orange-500/20">
+            <div
+              className="mb-4 rounded-xl overflow-hidden border-2 border-orange-500/20 cursor-pointer group relative"
+              onClick={() => setShowImageViewer(true)}
+              role="button"
+              tabIndex={0}
+              aria-label={`View full size image of ${costume.name} costume`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setShowImageViewer(true);
+                }
+              }}
+            >
               <img
                 src={costume.imageUrl}
                 alt={`${costume.name} costume`}
-                className="w-full h-48 object-cover"
+                className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
               />
+              {/* Zoom overlay */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
             </div>
           )}
 
@@ -339,6 +358,14 @@ const CostumeCard = ({
           </div>
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={showImageViewer}
+        onClose={() => setShowImageViewer(false)}
+        imageUrl={costume.imageUrl}
+        imageAlt={`${costume.name} costume`}
+      />
     </motion.div>
   );
 };
