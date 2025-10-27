@@ -14,6 +14,7 @@ import Admin from "./Admin";
 import EmailVerification from "./EmailVerification";
 import { useApp } from "../../hooks/useApp";
 import { authToasts, halloweenToast } from "../../utils/toastUtils";
+import logger from "../../utils/logger";
 
 const AuthRouter = () => {
   const { user, authLoading, isAdmin } = useApp();
@@ -31,14 +32,10 @@ const AuthRouter = () => {
   // Handle redirect result and email verification links on component mount
   useEffect(() => {
     const handleAuthActions = async () => {
-      console.log("🚀 AuthRouter: handleAuthActions called");
-      console.log("🚀 AuthRouter: Current URL:", window.location.href);
-
       try {
         // Handle Google sign-in redirect
         const result = await getRedirectResult(auth);
         if (result) {
-          console.log("🚀 AuthRouter: Google redirect result:", result);
           authToasts.loginSuccess();
         }
 
@@ -47,43 +44,29 @@ const AuthRouter = () => {
         const mode = urlParams.get("mode");
         const actionCode = urlParams.get("oobCode");
 
-        console.log(
-          "🚀 AuthRouter: URL params - mode:",
-          mode,
-          "oobCode:",
-          actionCode,
-        );
-
         if (mode === "verifyEmail" && actionCode) {
-          console.log("🚀 AuthRouter: Processing email verification...");
           try {
             await applyActionCode(auth, actionCode);
-            console.log("🚀 AuthRouter: Email verification successful");
+            logger.log("Email verification successful");
 
             // Force reload the current user to get updated verification status
             if (auth.currentUser) {
-              console.log(
-                "🚀 AuthRouter: Reloading user after verification...",
-              );
               await auth.currentUser.reload();
-              console.log(
-                "🚀 AuthRouter: User reloaded, emailVerified:",
-                auth.currentUser.emailVerified,
+              logger.log(
+                "User reloaded after verification, emailVerified:",
+                auth.currentUser.emailVerified
               );
 
               // Force a page reload to trigger fresh auth state
-              console.log(
-                "🚀 AuthRouter: Forcing page reload to update auth state...",
-              );
               window.location.reload();
             }
           } catch (error) {
-            console.error("🚀 AuthRouter: Email verification failed:", error);
+            logger.error("Email verification failed:", error);
             authToasts.loginError(error);
           }
         }
       } catch (error) {
-        console.error("🚀 AuthRouter: Error handling auth actions:", error);
+        logger.error("Error handling auth actions:", error);
         authToasts.loginError(error);
       }
     };
@@ -93,24 +76,13 @@ const AuthRouter = () => {
 
   // Update current view based on auth state
   useEffect(() => {
-    console.log("🚀 AuthRouter: View update triggered");
-    console.log("🚀 AuthRouter: user:", user);
-    console.log("🚀 AuthRouter: isAdmin:", isAdmin);
-
     if (user) {
-      console.log("🚀 AuthRouter: user.emailVerified:", user.emailVerified);
       if (!user.emailVerified) {
-        console.log("🚀 AuthRouter: Redirecting to email-verification");
         setCurrentView("email-verification");
       } else {
-        console.log(
-          "🚀 AuthRouter: Redirecting to",
-          isAdmin ? "admin" : "dashboard",
-        );
         setCurrentView(isAdmin ? "admin" : "dashboard");
       }
     } else {
-      console.log("🚀 AuthRouter: No user, redirecting to login");
       setCurrentView("login");
     }
   }, [user, isAdmin]);
@@ -147,7 +119,7 @@ const AuthRouter = () => {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
-        password,
+        password
       );
 
       // Update profile with displayName
@@ -182,7 +154,7 @@ const AuthRouter = () => {
     } catch (error) {
       console.error(error);
       halloweenToast.error(
-        "Sign-in Failed - Google sign-in failed. Please try again.",
+        "Sign-in Failed - Google sign-in failed. Please try again."
       );
       setError("Google sign-in failed. Please try again.");
       setIsLoading(false);

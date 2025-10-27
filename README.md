@@ -5,6 +5,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
 ## Features
 
 ### User Features
+
 - **Authentication**: Secure email/password and Google sign-in via Firebase Auth
 - **Costume Submission**: Upload costume images with optional descriptions
   - Camera capture support for mobile devices
@@ -17,6 +18,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
   - Trophy indicators for top 3 positions
 
 ### Admin Features
+
 - **Quick Admin Controls**: Convenient panel on Dashboard for common actions
   - Toggle voting on/off
   - Toggle results visibility
@@ -58,6 +60,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
 ## Setup
 
 1. **Clone the repository**
+
    ```bash
    cd my-app
    npm install
@@ -68,6 +71,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
    Create two environment files in the root directory:
 
    **`.env.development`** (for local development):
+
    ```env
    VITE_FIREBASE_API_KEY=your_dev_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_dev_auth_domain
@@ -79,6 +83,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
    ```
 
    **`.env.production`** (for production builds):
+
    ```env
    VITE_FIREBASE_API_KEY=your_prod_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_prod_auth_domain
@@ -92,6 +97,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
 3. **Firebase Security Rules**
 
    Configure Firestore rules to allow authenticated users to read/write:
+
    ```javascript
    rules_version = '2';
    service cloud.firestore {
@@ -104,6 +110,7 @@ A real-time web application for hosting Halloween costume contests with voting, 
    ```
 
    Configure Storage rules:
+
    ```javascript
    rules_version = '2';
    service firebase.storage {
@@ -168,17 +175,20 @@ New users are automatically assigned admin role if their email is in the admin l
 ## Application Workflow
 
 ### Contest Setup (Admin)
+
 1. Admin enables costume submissions (default: enabled)
 2. Users submit costumes with images and descriptions
 3. Admin monitors submissions via admin panel
 
 ### Voting Phase (Admin)
+
 1. Admin clicks "Open Voting" when ready
 2. Users can vote for their favorite costume
 3. Users can change their vote before voting closes
 4. Admin monitors vote counts in real-time
 
 ### Results Phase (Admin)
+
 1. Admin clicks "Close Voting" to stop accepting votes
 2. Admin clicks "Show Results" to reveal rankings
 3. If first place has a tie, admin can initiate a revote:
@@ -187,6 +197,7 @@ New users are automatically assigned admin role if their email is in the admin l
    - Process repeats until tie is broken or admin ends revote
 
 ### Contest Reset (Admin)
+
 1. Admin clicks "Reset Contest" with confirmation
 2. System performs complete cleanup:
    - Deletes all costumes and votes
@@ -199,12 +210,15 @@ New users are automatically assigned admin role if their email is in the admin l
 ## Technical Highlights
 
 ### Real-time Synchronization
+
 Uses Firestore `onSnapshot` listeners for instant updates across all clients. All users see vote counts and rankings update live without manual refresh.
 
 ### Automatic Logout on Reset
+
 When an admin resets the contest, all logged-in users are immediately signed out via a real-time listener on their Firestore user document. When the document is deleted during reset, the listener fires and triggers `signOut()`, preventing orphaned authentication states.
 
 **Implementation** (AppContext.jsx:119-143):
+
 ```javascript
 useEffect(() => {
   if (!user) return;
@@ -222,25 +236,31 @@ useEffect(() => {
 ```
 
 ### Performance Optimizations
+
 - `useMemo` for expensive calculations (vote counting, rankings)
 - Efficient vote count map using O(1) lookups instead of O(n) filtering
 - Memoized context values to prevent unnecessary re-renders
 - Lazy-loaded admin services to reduce initial bundle size
 
 ### Tie Detection Algorithm
+
 The ranking system detects ties by comparing vote counts:
+
 - Costumes with equal votes receive the same rank
 - Next rank skips positions (e.g., if two tied at #1, next is #3)
 - Displays "(Tied)" indicator for all tied positions
 - Enables revote functionality for first-place ties only
 
 ### Environment-Aware Logging
+
 Custom logger utility (`src/utils/logger.js`) silences debug logs in production:
+
 - `logger.log()`, `logger.warn()`, `logger.info()` only output in development mode
 - `logger.error()` always outputs for debugging purposes
 - Improves production performance and reduces console noise
 
 ### Image Upload
+
 - Supports both camera capture and gallery selection
 - Mobile devices can use native camera via HTML5 `capture="environment"` attribute
 - Images stored in Firebase Storage under `costume-images/` path
@@ -273,6 +293,7 @@ src/
 ## Firestore Collections
 
 ### `users`
+
 ```javascript
 {
   uid: string,
@@ -285,6 +306,7 @@ src/
 ```
 
 ### `costumes`
+
 ```javascript
 {
   userId: string,
@@ -297,6 +319,7 @@ src/
 ```
 
 ### `votes`
+
 ```javascript
 {
   voterId: string,
@@ -306,6 +329,7 @@ src/
 ```
 
 ### `appSettings`
+
 ```javascript
 {
   votingEnabled: boolean,

@@ -3,6 +3,8 @@
  * Provides validation and type conversion for environment variables
  */
 
+import logger from "./logger";
+
 /**
  * Get a required environment variable
  * @param {string} key - Environment variable key
@@ -13,7 +15,7 @@ export function getEnvVar(key, defaultValue = null) {
   const value = import.meta.env[key];
 
   if (!value && defaultValue === null) {
-    console.error(`Required environment variable ${key} is not set`);
+    logger.error(`Required environment variable ${key} is not set`);
     return null;
   }
 
@@ -66,13 +68,13 @@ export function validateFirebaseConfig() {
   ];
 
   const missingVars = requiredVars.filter(
-    (varName) => !import.meta.env[varName],
+    (varName) => !import.meta.env[varName]
   );
 
   if (missingVars.length > 0) {
-    console.error(
+    logger.error(
       "Missing required Firebase environment variables:",
-      missingVars,
+      missingVars
     );
     return false;
   }
@@ -109,11 +111,10 @@ export function getAppConfig() {
 export function logEnvironmentConfig() {
   const config = getAppConfig();
 
-  console.group("🔧 Environment Configuration");
-  console.log("Environment:", config.env);
-  console.log("App Name:", config.name);
-  console.log("Debug Mode:", config.debugMode);
-  console.log("Admin Emails:", config.adminEmails);
-  console.log("Firebase Project ID:", config.firebase.projectId);
-  console.groupEnd();
+  logger.log("🔧 Environment Configuration");
+  logger.log("Environment:", config.env);
+  logger.log("App Name:", config.name);
+  logger.log("Debug Mode:", config.debugMode);
+  logger.log("Admin Emails:", config.adminEmails);
+  logger.log("Firebase Project ID:", config.firebase.projectId);
 }

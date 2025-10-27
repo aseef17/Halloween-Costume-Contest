@@ -4,6 +4,7 @@ import { sendEmailVerification, signOut } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
 import Button from "../ui/Button";
 import { Mail, Clock, CheckCircle2, AlertCircle, LogOut } from "lucide-react";
+import logger from "../../utils/logger";
 
 const EmailVerification = ({ userEmail }) => {
   const [isResending, setIsResending] = useState(false);
@@ -17,27 +18,14 @@ const EmailVerification = ({ userEmail }) => {
   useEffect(() => {
     const checkInterval = setInterval(async () => {
       if (auth.currentUser && !auth.currentUser.emailVerified) {
-        console.log(
-          "📧 EmailVerification: Periodic check - emailVerified:",
-          auth.currentUser.emailVerified,
-        );
         try {
           await auth.currentUser.reload();
-          console.log(
-            "📧 EmailVerification: Periodic check after reload - emailVerified:",
-            auth.currentUser.emailVerified,
-          );
           if (auth.currentUser.emailVerified) {
-            console.log(
-              "📧 EmailVerification: Periodic check detected verification! Reloading page...",
-            );
+            logger.log("Periodic check detected email verification");
             window.location.reload();
           }
         } catch (error) {
-          console.error(
-            "📧 EmailVerification: Periodic verification check failed:",
-            error,
-          );
+          logger.error("Periodic verification check failed:", error);
         }
       }
     }, 30000); // Check every 30 seconds
@@ -84,44 +72,27 @@ const EmailVerification = ({ userEmail }) => {
   };
 
   const handleCheckVerification = async () => {
-    console.log("📧 EmailVerification: handleCheckVerification called");
     setIsCheckingVerification(true);
     setError("");
 
     try {
       if (auth.currentUser) {
-        console.log(
-          "📧 EmailVerification: Before reload - emailVerified:",
-          auth.currentUser.emailVerified,
-        );
-
         // Force reload to get latest verification status
         await auth.currentUser.reload();
 
-        console.log(
-          "📧 EmailVerification: After reload - emailVerified:",
-          auth.currentUser.emailVerified,
-        );
-
         if (auth.currentUser.emailVerified) {
-          console.log(
-            "📧 EmailVerification: Email verified! Reloading page...",
-          );
+          logger.log("Email verification detected, reloading page");
           // Page reload will trigger onAuthStateChanged with updated status
           window.location.reload();
           return;
         } else {
-          console.log("📧 EmailVerification: Email still not verified");
           setError(
-            "Email not yet verified. Please check your email and click the verification link.",
+            "Email not yet verified. Please check your email and click the verification link."
           );
         }
       }
     } catch (error) {
-      console.error(
-        "📧 EmailVerification: Error checking verification:",
-        error,
-      );
+      logger.error("Error checking verification:", error);
       setError("Failed to check verification status. Please try again.");
     }
 

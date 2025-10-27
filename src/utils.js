@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { getArrayEnvVar } from "./utils/env.js";
+import logger from "./utils/logger";
 
 /**
  * Combines multiple className strings with tailwind-merge
@@ -61,15 +62,15 @@ const getAdminEmails = () => {
   const emails = getArrayEnvVar("VITE_ADMIN_EMAILS", []);
 
   if (emails.length === 0) {
-    console.warn(
-      "VITE_ADMIN_EMAILS environment variable is not set or contains no valid email addresses. No admin users will be available.",
+    logger.warn(
+      "VITE_ADMIN_EMAILS environment variable is not set or contains no valid email addresses. No admin users will be available."
     );
     return [];
   }
 
-  console.log(
+  logger.log(
     `Loaded ${emails.length} admin email(s) from environment variables:`,
-    emails,
+    emails
   );
   return emails;
 };
