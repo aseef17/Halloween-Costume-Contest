@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
@@ -21,6 +21,7 @@ import {
 import Button from "../ui/Button";
 import Card from "../ui/Card";
 import { Switch } from "../ui/Switch";
+import ConfirmationModal from "../ui/ConfirmationModal";
 import HalloweenIcon from "../layout/HalloweenIcon";
 import AdminService from "../../services/AdminService";
 import { useApp } from "../../hooks/useApp";
@@ -30,6 +31,8 @@ import { adminToasts, promiseToast } from "../../utils/toastUtils";
 
 const Admin = ({ onSwitchToDashboard }) => {
   const { user, costumes, votes, appSettings, costumeResults } = useApp();
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false);
+
   const {
     isLoading: isAdminLoading,
     toggleVoting,
@@ -96,8 +99,13 @@ const Admin = ({ onSwitchToDashboard }) => {
     }
   };
 
-  const handleResetContest = async () => {
+  const handleResetContest = () => {
+    setShowResetConfirmation(true);
+  };
+
+  const handleConfirmReset = async () => {
     try {
+      setShowResetConfirmation(false);
       await promiseToast.resetContest(resetContest());
     } catch (error) {
       adminToasts.resetError();
@@ -210,7 +218,6 @@ const Admin = ({ onSwitchToDashboard }) => {
           </div>
         </div>
       </div>
-
       {/* Quick Stats - Modern cards */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -309,7 +316,6 @@ const Admin = ({ onSwitchToDashboard }) => {
           </div>
         </Card>
       </motion.div>
-
       {/* Contest Phase Controls - Simplified */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -576,10 +582,68 @@ const Admin = ({ onSwitchToDashboard }) => {
                 </div>
               </div>
             </div>
+
+            {/* Phase Reversion Controls */}
+            {(appSettings.votingEnabled || appSettings.resultsVisible) && (
+              <div className="pt-6 border-t border-gray-700/50">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <RotateCcw className="h-5 w-5 text-blue-400" />
+                  Phase Reversion
+                </h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Need to go back? Revert to previous phase if users forgot to
+                  add costumes.
+                </p>
+                <div className="flex gap-3 flex-wrap">
+                  {appSettings.resultsVisible && (
+                    <Button
+                      onClick={handleRevertToVotingEnabled}
+                      disabled={isAdminLoading}
+                      variant="outline"
+                      className="flex items-center gap-2 text-blue-300 border-blue-500/50 hover:bg-blue-500/10"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Back to Voting
+                    </Button>
+                  )}
+                  {appSettings.votingEnabled && (
+                    <Button
+                      onClick={handleRevertToContestActive}
+                      disabled={isAdminLoading}
+                      variant="outline"
+                      className="flex items-center gap-2 text-green-300 border-green-500/50 hover:bg-green-500/10"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Back to Contest
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* End Revote Controls */}
+            {appSettings.revoteMode && appSettings.votingEnabled && (
+              <div className="pt-6 border-t border-gray-700/50">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-purple-400" />
+                  End Revote
+                </h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Revote is active. End it when all eligible users have voted.
+                </p>
+                <Button
+                  onClick={handleEndRevote}
+                  disabled={isAdminLoading}
+                  className="flex items-center gap-2 rounded-xl py-2 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                >
+                  <Trophy className="h-4 w-4" />
+                  End Revote
+                </Button>
+              </div>
+            )}
           </div>
         </Card>
       </motion.div>
-
       {/* Costume Submissions - Mobile responsive */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -640,7 +704,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id
+                                  (vote) => vote.costumeId === costume.id,
                                 ).length
                               }
                             </span>
@@ -668,7 +732,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id
+                              (vote) => vote.costumeId === costume.id,
                             ).length
                           }{" "}
                           votes
@@ -688,7 +752,6 @@ const Admin = ({ onSwitchToDashboard }) => {
           </div>
         </Card>
       </motion.div>
-
       {/* Voting Results */}
       {votes.length > 0 && (
         <motion.div
@@ -739,175 +802,75 @@ const Admin = ({ onSwitchToDashboard }) => {
           </Card>
         </motion.div>
       )}
-
-      {/* Phase Reversion Controls */}
-      {(appSettings.votingEnabled || appSettings.resultsVisible) && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-blue-900/40 via-gray-900/60 to-green-900/40 border-blue-500/30">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-            <div className="relative p-5 sm:p-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <RotateCcw className="h-6 w-6 text-blue-400" />
-                  <h2 className="text-2xl sm:text-3xl font-halloween text-blue-300">
-                    Phase Reversion
-                  </h2>
-                </div>
-                <p className="text-gray-400 text-sm mb-6">
-                  Need to go back? Revert to previous phase if users forgot to
-                  add costumes
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  {appSettings.resultsVisible && (
-                    <Button
-                      onClick={handleRevertToVotingEnabled}
-                      disabled={isAdminLoading}
-                      variant="outline"
-                      className="flex items-center gap-2 text-blue-300 border-blue-500/50 hover:bg-blue-500/10"
+      {/* Reset Contest - Always visible at bottom */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.6 }}
+      >
+        <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-red-900/20 via-gray-900/60 to-red-900/20 border-red-500/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+          <div className="relative p-5 sm:p-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <AlertTriangle className="h-6 w-6 text-red-400" />
+                <h2 className="text-2xl sm:text-3xl font-halloween text-red-300">
+                  Danger Zone
+                </h2>
+              </div>
+              <p className="text-gray-400 text-sm mb-6">
+                ⚠️ This will permanently delete ALL costumes, votes, and images.
+                <br />
+                <span className="text-red-400 font-semibold">
+                  This action cannot be undone!
+                </span>
+                <br />
+                <span className="text-gray-500 text-xs">
+                  Auto-Revote on Tie will be enabled after reset.
+                </span>
+              </p>
+              <Button
+                onClick={handleResetContest}
+                disabled={isAdminLoading}
+                className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              >
+                {isAdminLoading ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
                     >
-                      <RotateCcw className="h-4 w-4" />
-                      Back to Voting
-                    </Button>
-                  )}
-                  {appSettings.votingEnabled && (
-                    <Button
-                      onClick={handleRevertToContestActive}
-                      disabled={isAdminLoading}
-                      variant="outline"
-                      className="flex items-center gap-2 text-green-300 border-green-500/50 hover:bg-green-500/10"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                      Back to Contest
-                    </Button>
-                  )}
-                </div>
-              </div>
+                      <RefreshCw className="h-4 w-4" />
+                    </motion.div>
+                    Resetting...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="h-4 w-4" />
+                    Reset Contest
+                  </>
+                )}
+              </Button>
             </div>
-          </Card>
-        </motion.div>
-      )}
+          </div>
+        </Card>
+      </motion.div>
 
-      {/* End Revote Controls */}
-      {appSettings.revoteMode && appSettings.votingEnabled && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-purple-900/40 via-gray-900/60 to-purple-900/40 border-purple-500/30">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-            <div className="relative p-5 sm:p-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <Trophy className="h-6 w-6 text-purple-400" />
-                  <h2 className="text-2xl sm:text-3xl font-halloween text-purple-300">
-                    End Revote
-                  </h2>
-                </div>
-                <p className="text-gray-400 text-sm mb-6">
-                  Revote is currently active. End it when all eligible users
-                  have voted.
-                  <br />
-                  <span className="text-purple-400 text-xs">
-                    Only users who are not tied can vote in the revote.
-                  </span>
-                </p>
-                <Button
-                  onClick={handleEndRevote}
-                  disabled={isAdminLoading}
-                  className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
-                >
-                  {isAdminLoading ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </motion.div>
-                      Ending...
-                    </>
-                  ) : (
-                    <>
-                      <Trophy className="h-4 w-4" />
-                      End Revote
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Secure Reset Contest - Only show when contest is active */}
-      {!appSettings.votingEnabled && !appSettings.resultsVisible && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-red-900/20 via-gray-900/60 to-red-900/20 border-red-500/30">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-            <div className="relative p-5 sm:p-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <AlertTriangle className="h-6 w-6 text-red-400" />
-                  <h2 className="text-2xl sm:text-3xl font-halloween text-red-300">
-                    Danger Zone
-                  </h2>
-                </div>
-                <p className="text-gray-400 text-sm mb-6">
-                  ⚠️ This will permanently delete ALL costumes, votes, and
-                  images.
-                  <br />
-                  <span className="text-red-400 font-semibold">
-                    This action cannot be undone!
-                  </span>
-                  <br />
-                  <span className="text-gray-500 text-xs">
-                    Auto-Revote on Tie will be enabled after reset.
-                  </span>
-                </p>
-                <Button
-                  onClick={handleResetContest}
-                  disabled={isAdminLoading}
-                  className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
-                >
-                  {isAdminLoading ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "linear",
-                        }}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </motion.div>
-                      Resetting...
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="h-4 w-4" />
-                      Reset Contest
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-      )}
+      {/* Reset Contest Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showResetConfirmation}
+        onClose={() => setShowResetConfirmation(false)}
+        onConfirm={handleConfirmReset}
+        title="Reset Contest"
+        message="Are you sure you want to reset the entire contest? This will permanently delete all costumes, votes, and user data. The contest will return to the initial state where users can submit costumes."
+        confirmText="Reset Contest"
+        confirmVariant="destructive"
+        isLoading={isAdminLoading}
+      />
     </motion.div>
   );
 };

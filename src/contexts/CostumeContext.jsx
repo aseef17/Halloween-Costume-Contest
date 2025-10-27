@@ -29,7 +29,7 @@ export const CostumeProvider = ({ children }) => {
       (error) => {
         console.error("Error fetching costumes:", error);
         setIsLoadingCostumes(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -48,7 +48,7 @@ export const CostumeProvider = ({ children }) => {
       },
       (error) => {
         console.error("Error fetching votes:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -67,7 +67,7 @@ export const CostumeProvider = ({ children }) => {
       },
       (error) => {
         console.error("Error fetching revote votes:", error);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -130,7 +130,7 @@ export const CostumeProvider = ({ children }) => {
       isLoadingCostumes,
       setUserCostume,
       setCurrentUserVote,
-    ]
+    ],
   );
 
   return (
