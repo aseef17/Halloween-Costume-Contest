@@ -37,6 +37,7 @@ const Admin = ({ onSwitchToDashboard }) => {
     toggleSelfVote,
     toggleAutoRevote,
     resetContest,
+    endRevote,
     closeVotingWithAutoRevote,
   } = useAdminOperations();
 
@@ -148,6 +149,16 @@ const Admin = ({ onSwitchToDashboard }) => {
       adminToasts.votingEnabled();
     } catch (error) {
       console.error("Error reverting to voting enabled:", error);
+    }
+  };
+
+  // End revote handler
+  const handleEndRevote = async () => {
+    try {
+      await promiseToast.revoteEnd(endRevote());
+      adminToasts.revoteEnded();
+    } catch (error) {
+      console.error("Error ending revote:", error);
     }
   };
 
@@ -316,16 +327,21 @@ const Admin = ({ onSwitchToDashboard }) => {
             {/* Phase Progress Indicator */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
+                {/* Contest Active */}
                 <div
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                    !appSettings.votingEnabled && !appSettings.resultsVisible
+                    !appSettings.votingEnabled &&
+                    !appSettings.resultsVisible &&
+                    !appSettings.revoteMode
                       ? "bg-green-500/20 border border-green-500/30"
                       : "bg-gray-500/20 border border-gray-500/30"
                   }`}
                 >
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      !appSettings.votingEnabled && !appSettings.resultsVisible
+                      !appSettings.votingEnabled &&
+                      !appSettings.resultsVisible &&
+                      !appSettings.revoteMode
                         ? "bg-green-500"
                         : "bg-gray-500"
                     }`}
@@ -335,16 +351,21 @@ const Admin = ({ onSwitchToDashboard }) => {
                   </span>
                 </div>
 
+                {/* Voting Enabled */}
                 <div
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                    appSettings.votingEnabled && !appSettings.resultsVisible
+                    appSettings.votingEnabled &&
+                    !appSettings.resultsVisible &&
+                    !appSettings.revoteMode
                       ? "bg-blue-500/20 border border-blue-500/30"
                       : "bg-gray-500/20 border border-gray-500/30"
                   }`}
                 >
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      appSettings.votingEnabled && !appSettings.resultsVisible
+                      appSettings.votingEnabled &&
+                      !appSettings.resultsVisible &&
+                      !appSettings.revoteMode
                         ? "bg-blue-500"
                         : "bg-gray-500"
                     }`}
@@ -354,16 +375,41 @@ const Admin = ({ onSwitchToDashboard }) => {
                   </span>
                 </div>
 
+                {/* Revote In Progress */}
                 <div
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                    !appSettings.votingEnabled && appSettings.resultsVisible
+                    appSettings.revoteMode && appSettings.votingEnabled
+                      ? "bg-orange-500/20 border border-orange-500/30"
+                      : "bg-gray-500/20 border border-gray-500/30"
+                  }`}
+                >
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      appSettings.revoteMode && appSettings.votingEnabled
+                        ? "bg-orange-500"
+                        : "bg-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm font-medium text-white">
+                    Revote In Progress
+                  </span>
+                </div>
+
+                {/* Results Shown */}
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                    !appSettings.votingEnabled &&
+                    appSettings.resultsVisible &&
+                    !appSettings.revoteMode
                       ? "bg-purple-500/20 border border-purple-500/30"
                       : "bg-gray-500/20 border border-gray-500/30"
                   }`}
                 >
                   <div
                     className={`w-3 h-3 rounded-full ${
-                      !appSettings.votingEnabled && appSettings.resultsVisible
+                      !appSettings.votingEnabled &&
+                      appSettings.resultsVisible &&
+                      !appSettings.revoteMode
                         ? "bg-purple-500"
                         : "bg-gray-500"
                     }`}
@@ -594,7 +640,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id,
+                                  (vote) => vote.costumeId === costume.id
                                 ).length
                               }
                             </span>
@@ -622,7 +668,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id,
+                              (vote) => vote.costumeId === costume.id
                             ).length
                           }{" "}
                           votes
@@ -739,6 +785,63 @@ const Admin = ({ onSwitchToDashboard }) => {
                     </Button>
                   )}
                 </div>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* End Revote Controls */}
+      {appSettings.revoteMode && appSettings.votingEnabled && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-purple-900/40 via-gray-900/60 to-purple-900/40 border-purple-500/30">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+            <div className="relative p-5 sm:p-6">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Trophy className="h-6 w-6 text-purple-400" />
+                  <h2 className="text-2xl sm:text-3xl font-halloween text-purple-300">
+                    End Revote
+                  </h2>
+                </div>
+                <p className="text-gray-400 text-sm mb-6">
+                  Revote is currently active. End it when all eligible users
+                  have voted.
+                  <br />
+                  <span className="text-purple-400 text-xs">
+                    Only users who are not tied can vote in the revote.
+                  </span>
+                </p>
+                <Button
+                  onClick={handleEndRevote}
+                  disabled={isAdminLoading}
+                  className="flex items-center justify-center gap-2 mx-auto rounded-xl py-3 px-6 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                >
+                  {isAdminLoading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </motion.div>
+                      Ending...
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="h-4 w-4" />
+                      End Revote
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </Card>

@@ -10,6 +10,7 @@ export const CostumeProvider = ({ children }) => {
   const [costumes, setCostumes] = useState([]);
   const [userCostume, setUserCostume] = useState(null);
   const [votes, setVotes] = useState([]);
+  const [revoteVotes, setRevoteVotes] = useState([]);
   const [currentUserVote, setCurrentUserVote] = useState(null);
   const [isLoadingCostumes, setIsLoadingCostumes] = useState(true);
 
@@ -28,7 +29,7 @@ export const CostumeProvider = ({ children }) => {
       (error) => {
         console.error("Error fetching costumes:", error);
         setIsLoadingCostumes(false);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -47,7 +48,26 @@ export const CostumeProvider = ({ children }) => {
       },
       (error) => {
         console.error("Error fetching votes:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  // Listen for revote votes changes
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, "revotes"),
+      (snapshot) => {
+        const revoteVotesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRevoteVotes(revoteVotesData);
       },
+      (error) => {
+        console.error("Error fetching revote votes:", error);
+      }
     );
 
     return () => unsubscribe();
@@ -55,28 +75,27 @@ export const CostumeProvider = ({ children }) => {
 
   // Calculate costume results with vote counts
   const costumeResults = useMemo(() => {
-    if (!costumes.length || !votes.length) return [];
+    if (!costumes.length) return [];
 
-    // Create vote count maps for initial and revote votes
+    // Create vote count maps for initial votes
     const initialVoteCountMap = votes.reduce((acc, vote) => {
-      if (vote.isInitialVote) {
-        acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
-      }
-      return acc;
-    }, {});
-
-    const revoteVoteCountMap = votes.reduce((acc, vote) => {
-      if (vote.isRevoteVote) {
-        acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
-      }
-      return acc;
-    }, {});
-
-    // Create total vote count map (for backward compatibility)
-    const totalVoteCountMap = votes.reduce((acc, vote) => {
       acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
       return acc;
     }, {});
+
+    // Create vote count map for revote votes
+    const revoteVoteCountMap = revoteVotes.reduce((acc, vote) => {
+      acc[vote.costumeId] = (acc[vote.costumeId] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Create total vote count map (initial + revote)
+    const totalVoteCountMap = {};
+    costumes.forEach((costume) => {
+      totalVoteCountMap[costume.id] =
+        (initialVoteCountMap[costume.id] || 0) +
+        (revoteVoteCountMap[costume.id] || 0);
+    });
 
     return costumes
       .map((costume) => ({
@@ -86,7 +105,7 @@ export const CostumeProvider = ({ children }) => {
         revoteVoteCount: revoteVoteCountMap[costume.id] || 0,
       }))
       .sort((a, b) => b.voteCount - a.voteCount);
-  }, [costumes, votes]);
+  }, [costumes, votes, revoteVotes]);
 
   // Memoize context value
   const contextValue = useMemo(
@@ -94,6 +113,7 @@ export const CostumeProvider = ({ children }) => {
       costumes,
       userCostume,
       votes,
+      revoteVotes,
       currentUserVote,
       costumeResults,
       isLoadingCostumes,
@@ -104,12 +124,13 @@ export const CostumeProvider = ({ children }) => {
       costumes,
       userCostume,
       votes,
+      revoteVotes,
       currentUserVote,
       costumeResults,
       isLoadingCostumes,
       setUserCostume,
       setCurrentUserVote,
-    ],
+    ]
   );
 
   return (

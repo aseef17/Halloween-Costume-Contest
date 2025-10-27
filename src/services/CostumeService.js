@@ -24,7 +24,7 @@ export const CostumeService = {
 
       if (!querySnapshot.empty) {
         throw new Error(
-          "You already have a costume submission. Please edit or delete it first.",
+          "You already have a costume submission. Please edit or delete it first."
         );
       }
 
@@ -84,7 +84,7 @@ export const CostumeService = {
         appSettings.revoteExcludedUserIds?.includes(userId)
       ) {
         throw new Error(
-          "You cannot vote in the revote as you are one of the tied contestants.",
+          "You cannot vote in the revote as you are one of the tied contestants."
         );
       }
 
@@ -96,18 +96,18 @@ export const CostumeService = {
         throw new Error("This costume is not part of the current revote.");
       }
 
-      // First check if user has already voted
-      const votesRef = collection(db, "votes");
+      // First check if user has already voted (in appropriate collection)
+      const collectionName = appSettings.revoteMode ? "revotes" : "votes";
+      const votesRef = collection(db, collectionName);
       const q = query(votesRef, where("voterId", "==", userId));
       const querySnapshot = await getDocs(q);
 
       // If user has already voted, update their vote
       if (!querySnapshot.empty) {
         const existingVote = querySnapshot.docs[0];
-        await updateDoc(doc(db, "votes", existingVote.id), {
+        await updateDoc(doc(db, collectionName, existingVote.id), {
           costumeId,
           timestamp: serverTimestamp(),
-          isRevoteVote: appSettings.revoteMode || false,
         });
         return { id: existingVote.id, costumeId, voterId: userId };
       }
@@ -117,11 +117,9 @@ export const CostumeService = {
         costumeId,
         voterId: userId,
         timestamp: serverTimestamp(),
-        isInitialVote: !appSettings.revoteMode,
-        isRevoteVote: appSettings.revoteMode || false,
       };
 
-      const voteRef = await addDoc(collection(db, "votes"), newVote);
+      const voteRef = await addDoc(collection(db, collectionName), newVote);
       return { id: voteRef.id, ...newVote };
     } catch (error) {
       logger.error("Error voting for costume:", error);

@@ -49,6 +49,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     isLoading: isAdminLoading,
     toggleVoting,
     toggleResults,
+    endRevote,
     closeVotingWithAutoRevote,
   } = useAdminOperations();
 
@@ -65,13 +66,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       appSettings.revoteCostumeIds.length > 0
     ) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
       // BUT if there's only one costume total, allow voting for it
       const otherCostumes = costumes.filter(
-        (costume) => costume.userId !== user?.uid,
+        (costume) => costume.userId !== user?.uid
       );
 
       if (otherCostumes.length === 0 && costumes.length === 1) {
@@ -80,8 +81,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       } else {
         // Multiple costumes exist - apply normal filtering
         filtered = costumes.filter(
-          (costume) =>
-            appSettings.allowSelfVote || costume.userId !== user?.uid,
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
         );
       }
     }
@@ -142,7 +142,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const handleCloseVotingAndShowResults = useCallback(async () => {
     try {
       const result = await promiseToast.closeVotingWithAutoRevote(
-        closeVotingWithAutoRevote(costumeResults),
+        closeVotingWithAutoRevote(costumeResults)
       );
       if (result.autoRevoteTriggered) {
         adminToasts.autoRevoteTriggered();
@@ -177,6 +177,16 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       console.error("Error reverting to voting enabled:", error);
     }
   }, [toggleVoting, toggleResults]);
+
+  // End revote handler
+  const handleEndRevote = useCallback(async () => {
+    try {
+      await promiseToast.revoteEnd(endRevote());
+      adminToasts.revoteEnded();
+    } catch (error) {
+      console.error("Error ending revote:", error);
+    }
+  }, [endRevote]);
 
   // Loading states
   const isLoadingCostumes = !costumes.length;
@@ -235,7 +245,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -316,10 +326,12 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                 >
                   {/* Phase Progress Indicator */}
                   <div className="flex items-center justify-between mb-4">
+                    {/* Contest Active */}
                     <div
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
                         !appSettings.votingEnabled &&
-                        !appSettings.resultsVisible
+                        !appSettings.resultsVisible &&
+                        !appSettings.revoteMode
                           ? "bg-green-500/20 border border-green-500/30"
                           : "bg-gray-500/20 border border-gray-500/30"
                       }`}
@@ -327,7 +339,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       <div
                         className={`w-3 h-3 rounded-full ${
                           !appSettings.votingEnabled &&
-                          !appSettings.resultsVisible
+                          !appSettings.resultsVisible &&
+                          !appSettings.revoteMode
                             ? "bg-green-500"
                             : "bg-gray-500"
                         }`}
@@ -337,9 +350,12 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       </span>
                     </div>
 
+                    {/* Voting Enabled */}
                     <div
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                        appSettings.votingEnabled && !appSettings.resultsVisible
+                        appSettings.votingEnabled &&
+                        !appSettings.resultsVisible &&
+                        !appSettings.revoteMode
                           ? "bg-blue-500/20 border border-blue-500/30"
                           : "bg-gray-500/20 border border-gray-500/30"
                       }`}
@@ -347,7 +363,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       <div
                         className={`w-3 h-3 rounded-full ${
                           appSettings.votingEnabled &&
-                          !appSettings.resultsVisible
+                          !appSettings.resultsVisible &&
+                          !appSettings.revoteMode
                             ? "bg-blue-500"
                             : "bg-gray-500"
                         }`}
@@ -357,9 +374,32 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       </span>
                     </div>
 
+                    {/* Revote In Progress */}
                     <div
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-                        !appSettings.votingEnabled && appSettings.resultsVisible
+                        appSettings.revoteMode && appSettings.votingEnabled
+                          ? "bg-orange-500/20 border border-orange-500/30"
+                          : "bg-gray-500/20 border border-gray-500/30"
+                      }`}
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          appSettings.revoteMode && appSettings.votingEnabled
+                            ? "bg-orange-500"
+                            : "bg-gray-500"
+                        }`}
+                      />
+                      <span className="text-sm font-medium text-white">
+                        Revote In Progress
+                      </span>
+                    </div>
+
+                    {/* Results Shown */}
+                    <div
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
+                        !appSettings.votingEnabled &&
+                        appSettings.resultsVisible &&
+                        !appSettings.revoteMode
                           ? "bg-purple-500/20 border border-purple-500/30"
                           : "bg-gray-500/20 border border-gray-500/30"
                       }`}
@@ -367,7 +407,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       <div
                         className={`w-3 h-3 rounded-full ${
                           !appSettings.votingEnabled &&
-                          appSettings.resultsVisible
+                          appSettings.resultsVisible &&
+                          !appSettings.revoteMode
                             ? "bg-purple-500"
                             : "bg-gray-500"
                         }`}
@@ -484,6 +525,24 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                     </div>
                   )}
 
+                  {/* End Revote Controls */}
+                  {appSettings.revoteMode && appSettings.votingEnabled && (
+                    <div className="text-center pt-4 border-t border-purple-500/20">
+                      <p className="text-gray-400 text-xs mb-3">
+                        Revote is active. End it when all eligible users have
+                        voted.
+                      </p>
+                      <Button
+                        onClick={handleEndRevote}
+                        disabled={isAdminLoading}
+                        className="flex items-center gap-2 mx-auto rounded-xl py-2 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+                      >
+                        <Trophy className="h-4 w-4" />
+                        End Revote
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Full Admin Panel */}
                   <div className="text-center pt-4 border-t border-purple-500/20">
                     <Button
@@ -523,8 +582,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -533,7 +592,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -546,7 +605,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -767,8 +826,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {costumes.length === 0
                 ? "No costumes have been submitted yet. Be the first to add one!"
                 : costumes.length === 1 && costumes[0]?.userId === user?.uid
-                  ? "You're the only one who has submitted a costume so far. Wait for others to join!"
-                  : "There are no other costumes to vote for at the moment."}
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
             {costumes.length === 0 && !appSettings.votingEnabled && (
               <div className="mt-4">

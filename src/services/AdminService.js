@@ -113,29 +113,20 @@ export const AdminService = {
   // Start revote for first place ties
   async startRevote(tiedCostumeIds, excludedUserIds = []) {
     try {
-      const batch = writeBatch(db);
-
-      // Instead of deleting votes, mark them as initial votes
-      const votesSnapshot = await getDocs(collection(db, "votes"));
-      votesSnapshot.forEach((voteDoc) => {
-        batch.update(doc(db, "votes", voteDoc.id), {
-          isInitialVote: true,
-          isRevoteVote: false,
-        });
-      });
+      const settingsRef = doc(db, "appSettings", "settings");
 
       // Update settings to enable revote mode
-      const settingsRef = doc(db, "appSettings", "settings");
-      batch.update(settingsRef, {
+      await updateDoc(settingsRef, {
         votingEnabled: true,
-        resultsVisible: true, // Show results during revote
+        resultsVisible: true,
         revoteMode: true,
         revoteCostumeIds: tiedCostumeIds,
         revoteExcludedUserIds: excludedUserIds,
         lastUpdated: serverTimestamp(),
       });
 
-      await batch.commit();
+      logger.log(`Started revote for ${tiedCostumeIds.length} tied costumes`);
+      logger.log(`Excluded users: ${excludedUserIds.length}`);
       return true;
     } catch (error) {
       console.error("Error starting revote:", error);
@@ -143,21 +134,76 @@ export const AdminService = {
     }
   },
 
-  // End revote mode
+  // End revote and clear revote data
   async endRevote() {
     try {
+      // Clear all revote votes
+      const revotesSnapshot = await getDocs(collection(db, "revotes"));
+      if (revotesSnapshot.size > 0) {
+        const batch = writeBatch(db);
+        revotesSnapshot.forEach((revoteDoc) => {
+          batch.delete(doc(db, "revotes", revoteDoc.id));
+        });
+        await batch.commit();
+        logger.log(`Cleared ${revotesSnapshot.size} revote votes`);
+      }
+
+      // Update settings to disable revote mode
       const settingsRef = doc(db, "appSettings", "settings");
       await updateDoc(settingsRef, {
+        votingEnabled: false,
+        resultsVisible: true,
         revoteMode: false,
         revoteCostumeIds: [],
         revoteExcludedUserIds: [],
-        votingEnabled: false,
         lastUpdated: serverTimestamp(),
       });
+
+      logger.log("Ended revote and cleared revote data");
       return true;
     } catch (error) {
-      console.error("Error ending revote:", error);
+      logger.error("Error ending revote:", error);
       throw error;
+    }
+  },
+
+  // Check if revote can be automatically ended
+  async checkRevoteCompletion() {
+    try {
+      const settingsRef = doc(db, "appSettings", "settings");
+      const settingsSnap = await getDoc(settingsRef);
+      const settings = settingsSnap.data();
+
+      if (!settings.revoteMode) return { canEnd: false };
+
+      // Get all eligible voters (users not excluded from revote)
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const eligibleVoters = usersSnapshot.docs
+        .map((doc) => doc.id)
+        .filter((userId) => !settings.revoteExcludedUserIds.includes(userId));
+
+      // Get all revote votes
+      const revotesSnapshot = await getDocs(collection(db, "revotes"));
+      const revoteVoters = revotesSnapshot.docs.map(
+        (doc) => doc.data().voterId
+      );
+
+      // Check if all eligible voters have voted
+      const allVoted = eligibleVoters.every((voterId) =>
+        revoteVoters.includes(voterId)
+      );
+
+      return {
+        canEnd: allVoted,
+        eligibleVoters: eligibleVoters.length,
+        votedVoters: revoteVoters.length,
+        remainingVoters: eligibleVoters.filter(
+          (voterId) => !revoteVoters.includes(voterId)
+        ),
+      };
+    } catch (error) {
+      logger.error("Error checking revote completion:", error);
+      return { canEnd: false };
     }
   },
 
@@ -230,6 +276,22 @@ export const AdminService = {
         logger.log(`✅ Deleted ${votesCount} votes`);
       } else {
         logger.log("✅ No votes to delete");
+      }
+
+      // Step 1.5: Delete all revote votes
+      logger.log("Deleting revote votes...");
+      const revotesSnapshot = await getDocs(collection(db, "revotes"));
+      const revotesCount = revotesSnapshot.size;
+
+      if (revotesCount > 0) {
+        const revotesBatch = writeBatch(db);
+        revotesSnapshot.forEach((revoteDoc) => {
+          revotesBatch.delete(doc(db, "revotes", revoteDoc.id));
+        });
+        await revotesBatch.commit();
+        logger.log(`✅ Deleted ${revotesCount} revote votes`);
+      } else {
+        logger.log("✅ No revote votes to delete");
       }
 
       // Step 2: Delete all costumes
