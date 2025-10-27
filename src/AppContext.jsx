@@ -6,6 +6,8 @@ import {
   onSnapshot,
   getDoc,
   setDoc,
+  updateDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { auth, db } from "./firebaseConfig";
 import { ADMIN_EMAILS } from "./utils";
@@ -52,17 +54,17 @@ export const AppProvider = ({ children }) => {
             const userData = userSnap.data();
             const userLastLogin = userData.lastLogin?.toDate();
 
-            // If user's last login was before the last reset, their account was deleted
-            // Force them to log out and log back in
+            // If user's last login was before the last reset, update their lastLogin
+            // This handles the case where contest was reset but user document still exists
             if (lastReset && userLastLogin && userLastLogin < lastReset) {
               logger.log(
-                "User account was deleted in reset. Forcing re-authentication.",
+                "Contest was reset. Updating user's lastLogin timestamp."
               );
-              await signOut(auth);
-              setUser(null);
-              setIsAdmin(false);
-              setAuthLoading(false);
-              return;
+              // Update the user's lastLogin to be after the reset
+              await updateDoc(userRef, {
+                lastLogin: serverTimestamp(),
+              });
+              // Continue with normal user setup
             }
 
             setUser({
@@ -74,13 +76,13 @@ export const AppProvider = ({ children }) => {
               lastLogin: new Date(),
             });
             setIsAdmin(
-              userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
+              userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email)
             );
           } else {
             // User document doesn't exist - create new user document
             // This handles both new registrations and post-reset logins
             logger.log(
-              "User document not found. Creating new user document...",
+              "User document not found. Creating new user document..."
             );
             const newUser = {
               uid: fbUser.uid,
@@ -122,7 +124,7 @@ export const AppProvider = ({ children }) => {
         if (!snapshot.exists()) {
           // User document was deleted - force logout immediately
           logger.log(
-            "User document deleted (contest reset detected). Forcing logout...",
+            "User document deleted (contest reset detected). Forcing logout..."
           );
           await signOut(auth);
           setUser(null);
@@ -131,7 +133,7 @@ export const AppProvider = ({ children }) => {
       },
       (error) => {
         logger.error("Error listening to user document:", error);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -180,7 +182,7 @@ export const AppProvider = ({ children }) => {
 
         // Find user's own costume
         const userCostume = costumesData.find(
-          (costume) => costume.userId === user.uid,
+          (costume) => costume.userId === user.uid
         );
         setUserCostume(userCostume || null);
       },
@@ -188,7 +190,7 @@ export const AppProvider = ({ children }) => {
         console.error("Error listening to costumes:", error);
         setCostumes([]);
         setUserCostume(null);
-      },
+      }
     );
 
     // Listen to votes
@@ -211,7 +213,7 @@ export const AppProvider = ({ children }) => {
         console.error("Error listening to votes:", error);
         setVotes([]);
         setCurrentUserVote(null);
-      },
+      }
     );
 
     return () => {
@@ -286,7 +288,7 @@ export const AppProvider = ({ children }) => {
       appSettings,
       isAdmin,
       costumeResults,
-    ],
+    ]
   );
 
   return (

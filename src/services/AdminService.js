@@ -185,12 +185,12 @@ export const AdminService = {
       // Get all revote votes
       const revotesSnapshot = await getDocs(collection(db, "revotes"));
       const revoteVoters = revotesSnapshot.docs.map(
-        (doc) => doc.data().voterId,
+        (doc) => doc.data().voterId
       );
 
       // Check if all eligible voters have voted
       const allVoted = eligibleVoters.every((voterId) =>
-        revoteVoters.includes(voterId),
+        revoteVoters.includes(voterId)
       );
 
       return {
@@ -198,7 +198,7 @@ export const AdminService = {
         eligibleVoters: eligibleVoters.length,
         votedVoters: revoteVoters.length,
         remainingVoters: eligibleVoters.filter(
-          (voterId) => !revoteVoters.includes(voterId),
+          (voterId) => !revoteVoters.includes(voterId)
         ),
       };
     } catch (error) {
@@ -232,7 +232,7 @@ export const AdminService = {
           // Start revote automatically (this sets votingEnabled: true and resultsVisible: true)
           await AdminService.startRevote(
             firstPlaceTie.map((costume) => costume.id),
-            excludedUserIds,
+            excludedUserIds
           );
 
           return {
@@ -310,11 +310,11 @@ export const AdminService = {
         logger.log("✅ No costumes to delete");
       }
 
-      // Step 3: Delete ALL users (they will be recreated on next login)
-      logger.log("👥 Deleting all users from 'users' collection...");
+      // Step 3: Clear user contest data (keep user documents but reset contest-related fields)
+      logger.log("👥 Clearing user contest data...");
       const usersSnapshot = await getDocs(collection(db, "users"));
       const usersCount = usersSnapshot.size;
-      logger.log(`   Found ${usersCount} users to delete`);
+      logger.log(`   Found ${usersCount} users to update`);
 
       if (usersCount > 0) {
         // Use multiple batches if needed (Firestore limit is 500 ops per batch)
@@ -325,8 +325,16 @@ export const AdminService = {
 
         usersSnapshot.forEach((userDoc) => {
           const userData = userDoc.data();
-          currentBatch.delete(doc(db, "users", userDoc.id));
-          logger.log(`  ❌ Queuing deletion: ${userData.email || userDoc.id}`);
+          // Clear contest-related fields but keep user document
+          currentBatch.update(doc(db, "users", userDoc.id), {
+            costumeSubmitted: false,
+            costumeId: null,
+            lastCostumeSubmission: null,
+            // Keep: uid, email, displayName, role, emailVerified, createdAt, lastLogin
+          });
+          logger.log(
+            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`
+          );
           operationCount++;
 
           // Create new batch if we hit the limit
@@ -345,11 +353,9 @@ export const AdminService = {
         // Commit all batches
         logger.log(`   Committing ${batches.length} batch(es)...`);
         await Promise.all(batches.map((batch) => batch.commit()));
-        logger.log(
-          `✅ Deleted ${usersCount} users (will be recreated on next login)`,
-        );
+        logger.log(`✅ Cleared contest data for ${usersCount} users`);
       } else {
-        logger.log("✅ No users to delete");
+        logger.log("✅ No users to update");
       }
 
       // Step 4: Reset app settings
