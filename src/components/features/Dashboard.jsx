@@ -822,147 +822,144 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       </motion.div>
 
       {/* User's Costume Section */}
-      {/* Your Costume Section - Only show when voting is NOT enabled */}
-      {!appSettings.votingEnabled && (
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8 sm:mb-12"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
-            <h2 className="text-2xl sm:text-3xl font-display text-white flex items-center gap-3">
-              <HalloweenIcon type="ghost" size="md" animate />
-              Your Costume
-            </h2>
+      {/* Your Costume Section */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="mb-8 sm:mb-12"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-display text-white flex items-center gap-3">
+            <HalloweenIcon type="ghost" size="md" animate />
+            Your Costume
+          </h2>
 
-            {!userCostume &&
-              !appSettings.votingEnabled &&
-              !appSettings.resultsVisible &&
-              !showAddCostume &&
-              user?.emailVerified && (
-                <Button
-                  onClick={() => setShowAddCostume(true)}
-                  variant="default"
-                  animation="spooky"
-                  className="flex items-center justify-center gap-2 py-2.5 sm:py-2 px-5 w-full sm:w-auto"
-                >
-                  <PlusCircle className="h-5 w-5" />
-                  <span className="font-semibold">Add Costume</span>
-                </Button>
-              )}
-
-            {/* Costume submission status messages */}
-            {!userCostume && user?.emailVerified && (
-              <div className="text-center">
-                {appSettings.votingEnabled ? (
-                  <p className="text-yellow-400 text-sm">
-                    ⚠️ Costume submission is closed while voting is active
-                  </p>
-                ) : appSettings.resultsVisible ? (
-                  <p className="text-purple-400 text-sm">
-                    🏁 Contest is over - costume submission is closed
-                  </p>
-                ) : null}
-              </div>
+          {!userCostume &&
+            !appSettings.votingEnabled &&
+            !appSettings.resultsVisible &&
+            !showAddCostume &&
+            user?.emailVerified && (
+              <Button
+                onClick={() => setShowAddCostume(true)}
+                variant="default"
+                animation="spooky"
+                className="flex items-center justify-center gap-2 py-2.5 sm:py-2 px-5 w-full sm:w-auto"
+              >
+                <PlusCircle className="h-5 w-5" />
+                <span className="font-semibold">Add Costume</span>
+              </Button>
             )}
-          </div>
 
-          {showAddCostume && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6"
-            >
-              <CostumeForm
-                userId={user.uid}
-                onSuccess={handleCostumeSuccess}
-                onCancel={() => setShowAddCostume(false)}
-              />
-            </motion.div>
-          )}
-
-          {editingCostume && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-6"
-            >
-              <CostumeForm
-                costume={editingCostume}
-                isEdit={true}
-                userId={user.uid}
-                onSuccess={handleCostumeSuccess}
-                onCancel={handleCancelEdit}
-              />
-            </motion.div>
-          )}
-
-          {/* Your Costume Section - Only show when voting is NOT enabled */}
-          {!appSettings.votingEnabled && (
-            <>
-              {userCostume ? (
-                <CostumeCard
-                  costume={
-                    appSettings.resultsVisible
-                      ? costumeResults.find((c) => c.id === userCostume.id) ||
-                        userCostume
-                      : userCostume
-                  }
-                  showEditOptions={!appSettings.votingEnabled}
-                  showVoteButton={appSettings.votingEnabled}
-                  rank={
-                    appSettings.resultsVisible
-                      ? costumeResults.find((c) => c.id === userCostume.id)
-                          ?.rank
-                      : undefined
-                  }
-                  onEdit={() => handleEditCostume(userCostume)}
-                />
-              ) : !showAddCostume ? (
-                <Card className="text-center p-8 sm:p-12 border-dashed border-2 border-orange-500/30 backdrop-blur-xl bg-gradient-to-br from-black/40 via-gray-900/40 to-orange-900/20">
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
-                  <div className="relative">
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    >
-                      <UserCircle className="h-16 w-16 sm:h-20 sm:w-20 text-orange-500/50 mx-auto mb-4" />
-                    </motion.div>
-                    <h3 className="text-xl sm:text-2xl font-display text-white mb-2">
-                      No Costume Yet
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-400 mb-6 max-w-md mx-auto">
-                      {appSettings.votingEnabled
-                        ? "Costume submissions are now closed."
-                        : "Add your costume to join the Halloween contest!"}
-                    </p>
-
-                    {appSettings.contestActive &&
-                      !appSettings.votingEnabled &&
-                      !appSettings.resultsVisible &&
-                      user?.emailVerified && (
-                        <Button
-                          onClick={() => setShowAddCostume(true)}
-                          variant="default"
-                          animation="haunted"
-                          className="flex items-center gap-2 mx-auto py-3 px-6"
-                        >
-                          <PlusCircle className="h-5 w-5" />
-                          <span className="font-semibold">
-                            Add Your Costume
-                          </span>
-                        </Button>
-                      )}
-                  </div>
-                </Card>
+          {/* Costume submission status messages */}
+          {!userCostume && user?.emailVerified && (
+            <div className="text-center">
+              {appSettings.votingEnabled ? (
+                <p className="text-yellow-400 text-sm">
+                  ⚠️ Costume submission is closed while voting is active
+                </p>
+              ) : appSettings.resultsVisible ? (
+                <p className="text-purple-400 text-sm">
+                  🏁 Contest is over - costume submission is closed
+                </p>
               ) : null}
-            </>
+            </div>
           )}
-        </motion.div>
-      )}
+        </div>
+
+        {showAddCostume && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6"
+          >
+            <CostumeForm
+              userId={user.uid}
+              onSuccess={handleCostumeSuccess}
+              onCancel={() => setShowAddCostume(false)}
+            />
+          </motion.div>
+        )}
+
+        {editingCostume && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-6"
+          >
+            <CostumeForm
+              costume={editingCostume}
+              isEdit={true}
+              userId={user.uid}
+              onSuccess={handleCostumeSuccess}
+              onCancel={handleCancelEdit}
+            />
+          </motion.div>
+        )}
+
+        {/* Your Costume Section */}
+        <>
+          {userCostume ? (
+            <CostumeCard
+              costume={
+                appSettings.resultsVisible
+                  ? costumeResults.find((c) => c.id === userCostume.id) ||
+                    userCostume
+                  : userCostume
+              }
+              showEditOptions={
+                appSettings.contestActive &&
+                !appSettings.votingEnabled &&
+                !appSettings.resultsVisible
+              }
+              showVoteButton={appSettings.votingEnabled}
+              rank={
+                appSettings.resultsVisible
+                  ? costumeResults.find((c) => c.id === userCostume.id)?.rank
+                  : undefined
+              }
+              onEdit={() => handleEditCostume(userCostume)}
+            />
+          ) : !showAddCostume ? (
+            <Card className="text-center p-8 sm:p-12 border-dashed border-2 border-orange-500/30 backdrop-blur-xl bg-gradient-to-br from-black/40 via-gray-900/40 to-orange-900/20">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+              <div className="relative">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <UserCircle className="h-16 w-16 sm:h-20 sm:w-20 text-orange-500/50 mx-auto mb-4" />
+                </motion.div>
+                <h3 className="text-xl sm:text-2xl font-display text-white mb-2">
+                  No Costume Yet
+                </h3>
+                <p className="text-sm sm:text-base text-gray-400 mb-6 max-w-md mx-auto">
+                  {appSettings.votingEnabled
+                    ? "Costume submissions are now closed."
+                    : "Add your costume to join the Halloween contest!"}
+                </p>
+
+                {appSettings.contestActive &&
+                  !appSettings.votingEnabled &&
+                  !appSettings.resultsVisible &&
+                  user?.emailVerified && (
+                    <Button
+                      onClick={() => setShowAddCostume(true)}
+                      variant="default"
+                      animation="haunted"
+                      className="flex items-center gap-2 mx-auto py-3 px-6"
+                    >
+                      <PlusCircle className="h-5 w-5" />
+                      <span className="font-semibold">Add Your Costume</span>
+                    </Button>
+                  )}
+              </div>
+            </Card>
+          ) : null}
+        </>
+      </motion.div>
 
       {/* Other Costumes Section - Only show when voting is NOT enabled */}
       {!appSettings.votingEnabled &&
