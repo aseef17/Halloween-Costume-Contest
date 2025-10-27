@@ -1,0 +1,8 @@
+# Netlify redirects file for Firebase Auth and SPA routing
+# This file should be placed in the public folder
+
+# Handle Firebase Auth redirects
+/__/auth/handler  /index.html  200
+
+# Handle all other routes for SPA
+/*  /index.html  200
