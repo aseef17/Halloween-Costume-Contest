@@ -275,7 +275,7 @@ const Admin = ({ onSwitchToDashboard }) => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-gray-400 text-xs sm:text-sm mb-2">
-                    Revote Votes
+                    Tie Breaker Votes
                   </p>
                   <h3 className="text-4xl sm:text-5xl font-bold text-purple-300">
                     {revoteVoteCount}
@@ -423,7 +423,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                     }`}
                   />
                   <span className="text-sm font-medium text-white">
-                    Revote In Progress
+                    Tie Breaker Vote In Progress
                   </span>
                 </div>
 
@@ -590,7 +590,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                 <div className="p-4 rounded-2xl bg-gradient-to-br from-black/40 to-purple-900/20 border border-purple-500/20">
                   <h4 className="text-base font-semibold text-orange-300 mb-2 flex items-center gap-2">
                     <RotateCcw className="h-4 w-4" />
-                    Auto-Revote on Tie
+                    Auto Tie Breaker Vote on Tie
                   </h4>
                   <p className="text-gray-400 text-xs mb-3">
                     Automatically start tie-breaker when first place is tied
@@ -652,10 +652,11 @@ const Admin = ({ onSwitchToDashboard }) => {
               <div className="pt-6 border-t border-gray-700/50">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-purple-400" />
-                  End Revote
+                  End Tie Breaker Vote
                 </h3>
                 <p className="text-gray-400 text-sm mb-4">
-                  Revote is active. End it when all eligible users have voted.
+                  Tie Breaker Vote is active. End it when all eligible users
+                  have voted.
                 </p>
                 <Button
                   onClick={handleEndRevote}
@@ -663,7 +664,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                   className="flex items-center gap-2 rounded-xl py-2 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
                 >
                   <Trophy className="h-4 w-4" />
-                  End Revote
+                  End Tie Breaker Vote
                 </Button>
               </div>
             )}
@@ -852,7 +853,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                 </span>
                 <br />
                 <span className="text-gray-500 text-xs">
-                  Auto-Revote on Tie will be enabled after reset.
+                  Auto Tie Breaker Vote on Tie will be enabled after reset.
                 </span>
               </p>
               <Button

@@ -63,7 +63,7 @@ const RevoteNotificationModal = ({
                         Tie-Breaker Required!
                       </h2>
                       <p className="text-gray-400 text-sm">
-                        A revote has been initiated
+                        A tie breaker vote has been initiated
                       </p>
                     </div>
                   </div>
@@ -116,12 +116,12 @@ const RevoteNotificationModal = ({
                       <AlertCircle className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <h4 className="text-blue-300 font-semibold mb-1">
-                          Revote Rules
+                          Tie Breaker Vote Rules
                         </h4>
                         <p className="text-gray-300 text-sm">
                           Since you're tied for first place, you cannot vote in
-                          the revote. Other users will vote to determine the
-                          winner!
+                          the tie breaker vote. Other users will vote to
+                          determine the winner!
                         </p>
                       </div>
                     </div>

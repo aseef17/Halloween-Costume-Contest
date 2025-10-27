@@ -73,13 +73,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       appSettings.revoteCostumeIds.length > 0
     ) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
       // BUT if there's only one costume total, allow voting for it
       const otherCostumes = costumes.filter(
-        (costume) => costume.userId !== user?.uid,
+        (costume) => costume.userId !== user?.uid
       );
 
       if (otherCostumes.length === 0 && costumes.length === 1) {
@@ -88,8 +88,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       } else {
         // Multiple costumes exist - apply normal filtering
         filtered = costumes.filter(
-          (costume) =>
-            appSettings.allowSelfVote || costume.userId !== user?.uid,
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
         );
       }
     }
@@ -150,7 +149,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const handleCloseVotingAndShowResults = useCallback(async () => {
     try {
       const result = await promiseToast.closeVotingWithAutoRevote(
-        closeVotingWithAutoRevote(costumeResults),
+        closeVotingWithAutoRevote(costumeResults)
       );
       if (result.autoRevoteTriggered) {
         adminToasts.autoRevoteTriggered();
@@ -283,7 +282,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -428,7 +427,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                         }`}
                       />
                       <span className="text-sm font-medium text-white">
-                        Revote In Progress
+                        Tie Breaker Vote In Progress
                       </span>
                     </div>
 
@@ -567,8 +566,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.revoteMode && appSettings.votingEnabled && (
                     <div className="text-center pt-4 border-t border-purple-500/20">
                       <p className="text-gray-400 text-xs mb-3">
-                        Revote is active. End it when all eligible users have
-                        voted.
+                        Tie Breaker Vote is active. End it when all eligible
+                        users have voted.
                       </p>
                       <Button
                         onClick={handleEndRevote}
@@ -576,7 +575,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                         className="flex items-center gap-2 mx-auto rounded-xl py-2 px-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
                       >
                         <Trophy className="h-4 w-4" />
-                        End Revote
+                        End Tie Breaker Vote
                       </Button>
                     </div>
                   )}
@@ -620,8 +619,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -630,7 +629,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -643,7 +642,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -866,8 +865,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {costumes.length === 0
                 ? "No costumes have been submitted yet. Be the first to add one!"
                 : costumes.length === 1 && costumes[0]?.userId === user?.uid
-                  ? "You're the only one who has submitted a costume so far. Wait for others to join!"
-                  : "There are no other costumes to vote for at the moment."}
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
             {costumes.length === 0 && !appSettings.votingEnabled && (
               <div className="mt-4">
@@ -922,7 +921,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         }
         tiedCostumes={costumeResults.filter((costume) => costume.rank === 1)}
         isExcludedFromRevote={appSettings.revoteExcludedUserIds?.includes(
-          user?.uid,
+          user?.uid
         )}
         userCostume={userCostume}
       />

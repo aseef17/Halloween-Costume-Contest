@@ -75,22 +75,22 @@ export const adminToasts = {
   selfVoteDisabled: () => halloweenToast.info("Self-voting is now disabled 🚫"),
   autoRevoteEnabled: () =>
     halloweenToast.success(
-      "Auto-revote is now enabled! Ties will be handled automatically! 🔄",
+      "Auto tie breaker vote is now enabled! Ties will be handled automatically! 🔄",
     ),
   autoRevoteDisabled: () =>
     halloweenToast.info(
-      "Auto-revote is now disabled. Manual control required 🎮",
+      "Auto tie breaker vote is now disabled. Manual control required 🎮",
     ),
   autoRevoteTriggered: () =>
     halloweenToast.success(
-      "Auto-revote triggered! Breaking the tie automatically! 🏆",
+      "Auto tie breaker vote triggered! Breaking the tie automatically! 🏆",
     ),
   contestReset: () =>
     halloweenToast.success("Contest has been reset! Fresh start! 🔄"),
   resetError: () =>
     halloweenToast.error("Failed to reset contest. Please try again 👻"),
   revoteError: () =>
-    halloweenToast.error("Failed to manage revote. Please try again 👻"),
+    halloweenToast.error("Failed to manage tie breaker vote. Please try again 👻"),
 };
 
 export const authToasts = {
@@ -181,17 +181,17 @@ export const promiseToast = {
 
   revoteStart: (promise) => {
     return toast.promise(promise, {
-      loading: "Starting revote... 🔄",
-      success: "Revote started! Users can now vote for the tied costumes! 🏆",
-      error: "Failed to start revote. Try again! 👻",
+      loading: "Starting tie breaker vote... 🔄",
+      success: "Tie breaker vote started! Users can now vote for the tied costumes! 🏆",
+      error: "Failed to start tie breaker vote. Try again! 👻",
     });
   },
 
   revoteEnd: (promise) => {
     return toast.promise(promise, {
-      loading: "Ending revote... ✅",
-      success: "Revote ended! Check the results! 🎉",
-      error: "Failed to end revote. Try again! 👻",
+      loading: "Ending tie breaker vote... ✅",
+      success: "Tie breaker vote ended! Check the results! 🎉",
+      error: "Failed to end tie breaker vote. Try again! 👻",
     });
   },
 };

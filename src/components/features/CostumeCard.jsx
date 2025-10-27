@@ -233,7 +233,7 @@ const CostumeCard = ({
                       </span>
                     </div>
                     <div className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/20">
-                      <span className="text-xs text-gray-400">Tie-Breaker</span>
+                      <span className="text-xs text-gray-400">Tie Breaker Vote</span>
                       <span className="text-sm font-semibold text-purple-300">
                         {costume.revoteVoteCount || 0}
                       </span>

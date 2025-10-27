@@ -19,7 +19,7 @@ const VotingSection = ({ costumes }) => {
     appSettings.revoteCostumeIds &&
     appSettings.revoteCostumeIds.length > 0
       ? costumes.filter((costume) =>
-          appSettings.revoteCostumeIds.includes(costume.id),
+          appSettings.revoteCostumeIds.includes(costume.id)
         )
       : costumes;
 
@@ -41,7 +41,7 @@ const VotingSection = ({ costumes }) => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <h2 className="text-3xl sm:text-4xl font-halloween text-orange-300 flex items-center gap-2">
           <Vote className="h-7 w-7 sm:h-8 sm:w-8" />
-          {appSettings.revoteMode ? "Revote for Winner!" : "Cast Your Vote!"}
+          {appSettings.revoteMode ? "Tie Breaker Vote!" : "Cast Your Vote!"}
         </h2>
 
         <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-orange-500/20 border border-purple-500/30">
@@ -51,13 +51,13 @@ const VotingSection = ({ costumes }) => {
               ? !user?.emailVerified
                 ? "Email verification required"
                 : isUserExcluded
-                  ? "You're excluded from revote"
-                  : "Breaking the tie"
+                ? "You're excluded from tie breaker vote"
+                : "Breaking the tie"
               : !user?.emailVerified
-                ? "Email verification required"
-                : hasVoted
-                  ? "You can change your vote"
-                  : "Pick your favorite"}
+              ? "Email verification required"
+              : hasVoted
+              ? "You can change your vote"
+              : "Pick your favorite"}
           </span>
         </div>
       </div>
@@ -77,14 +77,14 @@ const VotingSection = ({ costumes }) => {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-yellow-300 text-sm sm:text-base mb-1">
-                  Revote in Progress!
+                  Tie Breaker Vote in Progress!
                 </p>
                 <p className="text-xs sm:text-sm text-yellow-300/80">
                   {!user?.emailVerified
                     ? "Please verify your email address to participate in voting."
                     : isUserExcluded
-                      ? "You're one of the tied contestants, so you cannot participate in the revote."
-                      : "The admin has initiated a revote to break the first place tie. Vote for your favorite among the tied costumes."}
+                    ? "You're one of the tied contestants, so you cannot participate in the tie breaker vote."
+                    : "The admin has initiated a tie breaker vote to break the first place tie. Vote for your favorite among the tied costumes."}
                 </p>
               </div>
               <Sparkles className="hidden sm:block w-5 h-5 text-yellow-400 animate-pulse" />
