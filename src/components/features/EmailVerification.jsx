@@ -87,7 +87,7 @@ const EmailVerification = ({ userEmail }) => {
           return;
         } else {
           setError(
-            "Email not yet verified. Please check your email and click the verification link."
+            "Email not yet verified. Please check your email and click the verification link.",
           );
         }
       }

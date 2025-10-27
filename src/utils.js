@@ -63,14 +63,14 @@ const getAdminEmails = () => {
 
   if (emails.length === 0) {
     logger.warn(
-      "VITE_ADMIN_EMAILS environment variable is not set or contains no valid email addresses. No admin users will be available."
+      "VITE_ADMIN_EMAILS environment variable is not set or contains no valid email addresses. No admin users will be available.",
     );
     return [];
   }
 
   logger.log(
     `Loaded ${emails.length} admin email(s) from environment variables:`,
-    emails
+    emails,
   );
   return emails;
 };

@@ -68,13 +68,13 @@ export function validateFirebaseConfig() {
   ];
 
   const missingVars = requiredVars.filter(
-    (varName) => !import.meta.env[varName]
+    (varName) => !import.meta.env[varName],
   );
 
   if (missingVars.length > 0) {
     logger.error(
       "Missing required Firebase environment variables:",
-      missingVars
+      missingVars,
     );
     return false;
   }
