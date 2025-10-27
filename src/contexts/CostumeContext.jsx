@@ -11,7 +11,6 @@ export const CostumeProvider = ({ children }) => {
   const [userCostume, setUserCostume] = useState(null);
   const [votes, setVotes] = useState([]);
   const [revoteVotes, setRevoteVotes] = useState([]);
-  const [currentUserVote, setCurrentUserVote] = useState(null);
   const [isLoadingCostumes, setIsLoadingCostumes] = useState(true);
 
   // Listen for costumes changes
@@ -104,7 +103,30 @@ export const CostumeProvider = ({ children }) => {
         initialVoteCount: initialVoteCountMap[costume.id] || 0,
         revoteVoteCount: revoteVoteCountMap[costume.id] || 0,
       }))
-      .sort((a, b) => b.voteCount - a.voteCount);
+      .sort((a, b) => b.voteCount - a.voteCount)
+      .map((costume, index, sortedArray) => {
+        // Calculate rank with proper tie handling
+        let rank = index + 1;
+
+        // If this costume has the same vote count as the previous one, it's tied
+        if (
+          index > 0 &&
+          costume.voteCount === sortedArray[index - 1].voteCount
+        ) {
+          // Find the first costume with this vote count to get the correct rank
+          const firstWithSameVotes = sortedArray.findIndex(
+            (c) => c.voteCount === costume.voteCount,
+          );
+          rank = firstWithSameVotes + 1;
+        }
+
+        return {
+          ...costume,
+          rank,
+          isTied:
+            index > 0 && costume.voteCount === sortedArray[index - 1].voteCount,
+        };
+      });
   }, [costumes, votes, revoteVotes]);
 
   // Memoize context value
@@ -114,22 +136,18 @@ export const CostumeProvider = ({ children }) => {
       userCostume,
       votes,
       revoteVotes,
-      currentUserVote,
       costumeResults,
       isLoadingCostumes,
       setUserCostume,
-      setCurrentUserVote,
     }),
     [
       costumes,
       userCostume,
       votes,
       revoteVotes,
-      currentUserVote,
       costumeResults,
       isLoadingCostumes,
       setUserCostume,
-      setCurrentUserVote,
     ],
   );
 

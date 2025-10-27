@@ -22,6 +22,8 @@ const ResultsSection = ({ results }) => {
           rank,
           costumeName: userResult.name,
           voteCount: userResult.voteCount,
+          initialVoteCount: userResult.initialVoteCount || 0,
+          revoteVoteCount: userResult.revoteVoteCount || 0,
         });
         // Show celebration after a short delay
         const timer = setTimeout(() => setShowCelebration(true), 800);
@@ -65,6 +67,8 @@ const ResultsSection = ({ results }) => {
           rank={userRank.rank}
           costumeName={userRank.costumeName}
           voteCount={userRank.voteCount}
+          initialVoteCount={userRank.initialVoteCount}
+          revoteVoteCount={userRank.revoteVoteCount}
           onClose={() => setShowCelebration(false)}
         />
       )}

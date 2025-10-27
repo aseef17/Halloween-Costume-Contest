@@ -84,10 +84,12 @@ const CostumeCard = ({
   return (
     <motion.div
       className={cn(
-        "relative overflow-hidden rounded-3xl shadow-2xl border backdrop-blur-xl",
+        "relative rounded-3xl shadow-2xl border backdrop-blur-xl",
         "bg-gradient-to-br from-black/60 via-gray-900/60 to-orange-900/40",
         "hover:shadow-orange-500/20 transition-all duration-300",
-        showRank && rank <= 3 ? "border-orange-400/50" : "border-orange-500/20",
+        showRank && rank <= 3
+          ? "border-orange-400/70 shadow-orange-400/20"
+          : "border-orange-500/40 shadow-orange-500/10",
         isVotedFor && "ring-2 ring-purple-500/50 border-purple-500/50",
       )}
       {...animationVariants.fadeInUp}
@@ -97,7 +99,7 @@ const CostumeCard = ({
       aria-label={`Costume: ${costume.name}`}
     >
       {/* Glass morphism overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none rounded-3xl" />
 
       {/* Rank badge for top 3 */}
       {showRank && rank <= 3 && (
@@ -134,7 +136,7 @@ const CostumeCard = ({
         </motion.div>
       )}
 
-      <div className="relative flex flex-col h-full p-6">
+      <div className="relative flex flex-col h-full p-6 overflow-hidden rounded-3xl">
         <div className="mb-4">
           {/* Rank indicator */}
           {showRank && (
@@ -217,23 +219,27 @@ const CostumeCard = ({
                 </span>
               </div>
 
-              {/* Show initial and revote votes separately during revote mode */}
-              {appSettings.revoteMode && costume.initialVoteCount > 0 && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20">
-                    <span className="text-xs text-gray-400">Initial</span>
-                    <span className="text-sm font-semibold text-blue-300">
-                      {costume.initialVoteCount}
-                    </span>
+              {/* Show initial and revote votes separately for tied costumes */}
+              {(appSettings.revoteMode ||
+                (appSettings.resultsVisible &&
+                  costume.initialVoteCount > 0 &&
+                  costume.revoteVoteCount > 0)) &&
+                costume.initialVoteCount > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20">
+                      <span className="text-xs text-gray-400">Initial</span>
+                      <span className="text-sm font-semibold text-blue-300">
+                        {costume.initialVoteCount}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/20">
+                      <span className="text-xs text-gray-400">Tie-Breaker</span>
+                      <span className="text-sm font-semibold text-purple-300">
+                        {costume.revoteVoteCount || 0}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/20">
-                    <span className="text-xs text-gray-400">Tie-Breaker</span>
-                    <span className="text-sm font-semibold text-purple-300">
-                      {costume.revoteVoteCount || 0}
-                    </span>
-                  </div>
-                </div>
-              )}
+                )}
             </div>
           )}
 

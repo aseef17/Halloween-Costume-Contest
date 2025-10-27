@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { AuthProvider } from "./AuthContext";
 import { CostumeProvider } from "./CostumeContext";
 import { AppSettingsProvider } from "./AppSettingsContext";
@@ -29,6 +29,29 @@ export const useApp = () => {
   const costumes = useCostumes();
   const settings = useAppSettings();
 
+  // Calculate current user vote based on voting mode
+  const currentUserVote = useMemo(() => {
+    if (!auth.user?.uid) return null;
+
+    // In revote mode, check revote votes
+    if (settings.appSettings.revoteMode) {
+      return (
+        costumes.revoteVotes.find((vote) => vote.voterId === auth.user.uid) ||
+        null
+      );
+    }
+
+    // In normal mode, check regular votes
+    return (
+      costumes.votes.find((vote) => vote.voterId === auth.user.uid) || null
+    );
+  }, [
+    auth.user?.uid,
+    costumes.votes,
+    costumes.revoteVotes,
+    settings.appSettings.revoteMode,
+  ]);
+
   return {
     // Auth context
     user: auth.user,
@@ -39,7 +62,8 @@ export const useApp = () => {
     costumes: costumes.costumes,
     userCostume: costumes.userCostume,
     votes: costumes.votes,
-    currentUserVote: costumes.currentUserVote,
+    revoteVotes: costumes.revoteVotes,
+    currentUserVote,
     costumeResults: costumes.costumeResults,
     isLoadingCostumes: costumes.isLoadingCostumes,
     setUserCostume: costumes.setUserCostume,

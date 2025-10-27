@@ -10,7 +10,14 @@ import trophyAnimation from "../../assets/lottie/trophy.json";
 import confettiAnimation from "../../assets/lottie/confetti.json";
 import fireworksAnimation from "../../assets/lottie/fireworks.json";
 
-const WinnerCelebrationModal = ({ rank, costumeName, voteCount, onClose }) => {
+const WinnerCelebrationModal = ({
+  rank,
+  costumeName,
+  voteCount,
+  initialVoteCount,
+  revoteVoteCount,
+  onClose,
+}) => {
   const [isVisible, setIsVisible] = useState(true);
   const [confetti, setConfetti] = useState([]);
 
@@ -248,6 +255,38 @@ const WinnerCelebrationModal = ({ rank, costumeName, voteCount, onClose }) => {
                       </p>
                     </div>
                   </div>
+
+                  {/* Show vote breakdown if there are both initial and revote votes */}
+                  {initialVoteCount > 0 && revoteVoteCount > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="mt-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30"
+                    >
+                      <p className="text-sm text-gray-400 mb-3 text-center">
+                        Vote Breakdown
+                      </p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-400 mb-1">
+                            Initial Votes
+                          </p>
+                          <p className="text-xl font-bold text-blue-300">
+                            {initialVoteCount}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-400 mb-1">
+                            Tie-Breaker Votes
+                          </p>
+                          <p className="text-xl font-bold text-purple-300">
+                            {revoteVoteCount}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* Emoji celebration */}
