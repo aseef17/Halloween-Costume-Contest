@@ -189,7 +189,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode
+        appSettings.revoteMode,
       );
 
       if (unvoted.length > 0) {
@@ -214,7 +214,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        true
+        true,
       );
 
       if (unvoted.length > 0) {
@@ -240,7 +240,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         : "voting_reminder";
       await NotificationService.sendVotingReminders(
         usersToNotify,
-        notificationType
+        notificationType,
       );
 
       // Close the modal and proceed with the original action
@@ -817,7 +817,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id
+                                  (vote) => vote.costumeId === costume.id,
                                 ).length
                               }
                             </span>
@@ -845,7 +845,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id
+                              (vote) => vote.costumeId === costume.id,
                             ).length
                           }{" "}
                           votes

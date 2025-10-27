@@ -42,7 +42,7 @@ class NotificationService {
       for (const notification of notifications) {
         const docRef = await addDoc(
           collection(db, "notifications"),
-          notification
+          notification,
         );
         batch.push(docRef);
       }
@@ -66,7 +66,7 @@ class NotificationService {
       collection(db, "notifications"),
       where("userId", "==", userId),
       where("dismissed", "==", false),
-      orderBy("createdAt", "desc")
+      orderBy("createdAt", "desc"),
     );
 
     return onSnapshot(
@@ -81,7 +81,7 @@ class NotificationService {
       (error) => {
         logger.error("Error fetching user notifications:", error);
         callback([]);
-      }
+      },
     );
   }
 

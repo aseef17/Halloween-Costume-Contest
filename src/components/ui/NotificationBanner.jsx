@@ -19,7 +19,7 @@ const NotificationBanner = () => {
       (userNotifications) => {
         setNotifications(userNotifications);
         setIsVisible(userNotifications.length > 0);
-      }
+      },
     );
 
     return unsubscribe;
