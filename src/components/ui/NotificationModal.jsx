@@ -21,7 +21,7 @@ const NotificationModal = () => {
         setNotifications(userNotifications);
         setIsVisible(userNotifications.length > 0);
         setCurrentNotificationIndex(0);
-      }
+      },
     );
 
     return unsubscribe;
@@ -144,8 +144,8 @@ const NotificationModal = () => {
                     {isVotingReminder
                       ? "Please cast your vote for your favorite costume to help determine the winner!"
                       : isTieBreakerReminder
-                      ? "The tie breaker vote is still open! Please cast your vote to help determine the winner."
-                      : "Please take action to continue participating in the contest."}
+                        ? "The tie breaker vote is still open! Please cast your vote to help determine the winner."
+                        : "Please take action to continue participating in the contest."}
                   </p>
                 </div>
               </div>

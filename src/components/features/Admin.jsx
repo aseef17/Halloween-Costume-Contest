@@ -191,7 +191,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode
+        appSettings.revoteMode,
       );
 
       // Filter out the current admin user from notifications
@@ -219,7 +219,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        true
+        true,
       );
 
       // Filter out the current admin user from notifications
@@ -248,7 +248,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         : "voting_reminder";
       await NotificationService.sendVotingReminders(
         usersToNotify,
-        notificationType
+        notificationType,
       );
 
       adminToasts.votingEnabled(); // Success message for reminders sent
@@ -287,7 +287,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode
+        appSettings.revoteMode,
       );
 
       // Filter out the current admin user from notifications
@@ -857,7 +857,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id
+                                  (vote) => vote.costumeId === costume.id,
                                 ).length
                               }
                             </span>
@@ -885,7 +885,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id
+                              (vote) => vote.costumeId === costume.id,
                             ).length
                           }{" "}
                           votes
