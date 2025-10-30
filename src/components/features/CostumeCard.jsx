@@ -18,6 +18,7 @@ import { useCostumeOperations } from "../../hooks/useAsyncOperations";
 import { promiseToast } from "../../utils/toastUtils";
 import { ariaLabels, keyboardNavigation } from "../../utils/accessibility";
 import { animationVariants, hoverAnimations } from "../../utils/animations";
+import logger from "../../utils/logger";
 
 const CostumeCard = ({
   costume,
@@ -67,7 +68,7 @@ const CostumeCard = ({
       );
     } catch (error) {
       // Error is handled by the promise toast
-      console.error("Error voting:", error);
+      logger.error("Error voting:", error);
     }
   }, [user, costume.userId, costume.id, appSettings, voteForCostume]);
 
@@ -78,7 +79,7 @@ const CostumeCard = ({
       await promiseToast.costumeDelete(deleteCostume(costume.id));
     } catch (error) {
       // Error is handled by the promise toast
-      console.error("Error deleting costume:", error);
+      logger.error("Error deleting costume:", error);
     }
   }, [costume, user, deleteCostume]);
 
