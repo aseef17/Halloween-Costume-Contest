@@ -10,12 +10,15 @@ import {
 } from "firebase/storage";
 import { costumeToasts } from "../../utils/toastUtils";
 import { motion } from "motion/react";
+import logger from "../../utils/logger";
 
 const ImageUpload = ({
   onImageUpload,
   onImageRemove,
   onUploadStart,
   currentImageUrl = null,
+  userId = null,
+  userName = "user",
   disabled = false,
   className = "",
 }) => {
@@ -43,9 +46,12 @@ const ImageUpload = ({
     if (onUploadStart) onUploadStart();
 
     try {
-      // Create a unique filename
-      const timestamp = Date.now();
-      const fileName = `costume-${timestamp}-${file.name}`;
+      // Create a consistent filename using userId and userName
+      // This ensures the same storage location for the same user
+      const sanitizedUserName = userName
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-");
+      const fileName = `costume-${sanitizedUserName}-${userId}`;
       const imageRef = ref(storage, `costume-images/${fileName}`);
 
       // Upload the file
@@ -55,7 +61,7 @@ const ImageUpload = ({
       onImageUpload(downloadURL);
       costumeToasts.uploadSuccess();
     } catch (error) {
-      console.error("Error uploading image:", error);
+      logger.error("Error uploading image:", error);
       costumeToasts.uploadError();
     } finally {
       setIsUploading(false);
@@ -66,12 +72,12 @@ const ImageUpload = ({
     if (!currentImageUrl) return;
 
     try {
-      // Extract the file path from the URL
+      // ref can take a full download URL directly
       const imageRef = ref(storage, currentImageUrl);
       await deleteObject(imageRef);
       onImageRemove();
     } catch (error) {
-      console.error("Error removing image:", error);
+      logger.error("Error removing image:", error);
       // Still remove from UI even if deletion fails
       onImageRemove();
     }
@@ -119,6 +125,7 @@ const ImageUpload = ({
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <Button
+                type="button"
                 variant="danger"
                 size="sm"
                 onClick={handleRemoveImage}
