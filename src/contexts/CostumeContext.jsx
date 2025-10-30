@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useMemo } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "./AuthContext";
+import logger from "../utils/logger";
 
 // Create Costume Context
 const CostumeContext = createContext(null);
@@ -28,9 +29,9 @@ export const CostumeProvider = ({ children }) => {
         setIsLoadingCostumes(false);
       },
       (error) => {
-        console.error("Error fetching costumes:", error);
+        logger.error("Error fetching costumes:", error);
         setIsLoadingCostumes(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -48,8 +49,8 @@ export const CostumeProvider = ({ children }) => {
         setVotes(votesData);
       },
       (error) => {
-        console.error("Error fetching votes:", error);
-      }
+        logger.error("Error fetching votes:", error);
+      },
     );
 
     return () => unsubscribe();
@@ -67,8 +68,8 @@ export const CostumeProvider = ({ children }) => {
         setRevoteVotes(revoteVotesData);
       },
       (error) => {
-        console.error("Error fetching revote votes:", error);
-      }
+        logger.error("Error fetching revote votes:", error);
+      },
     );
 
     return () => unsubscribe();
@@ -78,26 +79,10 @@ export const CostumeProvider = ({ children }) => {
   useEffect(() => {
     if (user?.uid && costumes.length > 0) {
       const foundUserCostume = costumes.find(
-        (costume) => costume.userId === user.uid
+        (costume) => costume.userId === user.uid,
       );
-      console.log("🔍 CostumeContext: Detecting user costume", {
-        userId: user.uid,
-        totalCostumes: costumes.length,
-        foundUserCostume: foundUserCostume
-          ? { id: foundUserCostume.id, name: foundUserCostume.name }
-          : null,
-        allCostumes: costumes.map((c) => ({
-          id: c.id,
-          userId: c.userId,
-          name: c.name,
-        })),
-      });
       setUserCostume(foundUserCostume || null);
     } else {
-      console.log("🔍 CostumeContext: No user or costumes", {
-        userId: user?.uid,
-        costumesLength: costumes.length,
-      });
       setUserCostume(null);
     }
   }, [user?.uid, costumes]);
@@ -145,7 +130,7 @@ export const CostumeProvider = ({ children }) => {
         ) {
           // Find the first costume with this vote count to get the correct rank
           const firstWithSameVotes = sortedArray.findIndex(
-            (c) => c.voteCount === costume.voteCount
+            (c) => c.voteCount === costume.voteCount,
           );
           rank = firstWithSameVotes + 1;
         }
@@ -178,7 +163,7 @@ export const CostumeProvider = ({ children }) => {
       costumeResults,
       isLoadingCostumes,
       setUserCostume,
-    ]
+    ],
   );
 
   return (
