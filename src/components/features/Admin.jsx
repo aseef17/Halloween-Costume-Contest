@@ -57,6 +57,7 @@ const Admin = ({ onSwitchToDashboard }) => {
     toggleAutoRevote,
     resetContest,
     closeVotingWithAutoRevote,
+    endRevote,
   } = useAdminOperations();
 
   const userCount =
@@ -270,12 +271,16 @@ const Admin = ({ onSwitchToDashboard }) => {
         setShowUnvotedUsersModal(true);
       } else {
         // No unvoted users, proceed with ending revote
-        await handleEndRevote();
+        await endRevote();
+        adminToasts.votingDisabled();
+        adminToasts.resultsShown();
       }
     } catch (error) {
       logger.error("Error checking unvoted users for revote:", error);
       // Fallback to normal end revote
-      await handleEndRevote();
+      await endRevote();
+      adminToasts.votingDisabled();
+      adminToasts.resultsShown();
     }
   };
 

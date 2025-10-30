@@ -64,7 +64,7 @@ const CostumeCard = ({
 
     try {
       await promiseToast.voteCast(
-        voteForCostume(costume.id, user.uid, appSettings),
+        voteForCostume(costume.id, user.uid, appSettings)
       );
     } catch (error) {
       // Error is handled by the promise toast
@@ -94,7 +94,7 @@ const CostumeCard = ({
         showRank && rank <= 3
           ? "border-orange-400/70 shadow-orange-400/20"
           : "border-orange-500/40 shadow-orange-500/10",
-        isVotedFor && "ring-2 ring-purple-500/50 border-purple-500/50",
+        isVotedFor && "ring-2 ring-purple-500/50 border-purple-500/50"
       )}
       {...animationVariants.fadeInUp}
       transition={{ duration: 0.5 }}
@@ -118,7 +118,7 @@ const CostumeCard = ({
               "flex items-center justify-center w-16 h-16 rounded-full border-4 border-black/50",
               rank === 1 && "bg-gradient-to-br from-yellow-400 to-orange-500",
               rank === 2 && "bg-gradient-to-br from-gray-300 to-gray-500",
-              rank === 3 && "bg-gradient-to-br from-amber-600 to-amber-800",
+              rank === 3 && "bg-gradient-to-br from-amber-600 to-amber-800"
             )}
           >
             <Award className="w-8 h-8 text-white drop-shadow-lg" />
@@ -155,7 +155,7 @@ const CostumeCard = ({
                   rank === 3 &&
                     "bg-amber-600/20 border-amber-600/50 text-amber-400",
                   rank > 3 &&
-                    "bg-orange-500/20 border-orange-500/50 text-orange-300",
+                    "bg-orange-500/20 border-orange-500/50 text-orange-300"
                 )}
               >
                 #{rank}
@@ -170,7 +170,7 @@ const CostumeCard = ({
           <h3
             className={cn(
               "text-2xl sm:text-3xl font-bold text-orange-300 font-display mb-2 leading-tight",
-              rank && rank <= 3 && "text-3xl sm:text-4xl",
+              rank && rank <= 3 && "text-3xl sm:text-4xl"
             )}
           >
             {costume.name}
@@ -209,6 +209,14 @@ const CostumeCard = ({
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                 <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
+              {/* Click to view text overlay - only for other users' costumes */}
+              {!isOwnCostume && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent px-3 py-2">
+                  <p className="text-xs text-white/90 font-medium text-center">
+                    Click to view the entire costume
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -274,7 +282,7 @@ const CostumeCard = ({
                   "flex-1 sm:flex-none flex items-center justify-center gap-2 py-3 px-6 text-sm sm:text-base font-semibold rounded-xl transition-all",
                   isVotedFor
                     ? "bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-                    : "bg-gradient-to-r from-orange-500 to-purple-700 hover:from-orange-600 hover:to-purple-800",
+                    : "bg-gradient-to-r from-orange-500 to-purple-700 hover:from-orange-600 hover:to-purple-800"
                 )}
                 aria-label={ariaLabels.vote(costume.name)}
                 aria-pressed={isVotedFor}
@@ -330,7 +338,7 @@ const CostumeCard = ({
                     disabled={isLoading}
                     aria-label={ariaLabels.delete(costume.name)}
                     onKeyDown={keyboardNavigation.handleEnter(
-                      handleDeleteCostume,
+                      handleDeleteCostume
                     )}
                     {...hoverAnimations.buttonHover}
                   >
