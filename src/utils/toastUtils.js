@@ -56,7 +56,7 @@ export const costumeToasts = {
   voteChanged: () => halloweenToast.info("Vote changed! 🔄"),
   alreadyExists: () =>
     halloweenToast.error(
-      "You already have a costume! Edit or delete it first 👻"
+      "You already have a costume! Edit or delete it first 👻",
     ),
   uploadSuccess: () =>
     halloweenToast.success("Image uploaded successfully! 📸"),
@@ -75,15 +75,15 @@ export const adminToasts = {
   selfVoteDisabled: () => halloweenToast.info("Self-voting is now disabled 🚫"),
   autoRevoteEnabled: () =>
     halloweenToast.success(
-      "Auto tie breaker vote is now enabled! Ties will be handled automatically! 🔄"
+      "Auto tie breaker vote is now enabled! Ties will be handled automatically! 🔄",
     ),
   autoRevoteDisabled: () =>
     halloweenToast.info(
-      "Auto tie breaker vote is now disabled. Manual control required 🎮"
+      "Auto tie breaker vote is now disabled. Manual control required 🎮",
     ),
   autoRevoteTriggered: () =>
     halloweenToast.success(
-      "Auto tie breaker vote triggered! Breaking the tie automatically! 🏆"
+      "Auto tie breaker vote triggered! Breaking the tie automatically! 🏆",
     ),
   contestReset: () =>
     halloweenToast.success("Contest has been reset! Fresh start! 🔄"),
@@ -91,7 +91,7 @@ export const adminToasts = {
     halloweenToast.error("Failed to reset contest. Please try again 👻"),
   revoteError: () =>
     halloweenToast.error(
-      "Failed to manage tie breaker vote. Please try again 👻"
+      "Failed to manage tie breaker vote. Please try again 👻",
     ),
   deleteUserError: () =>
     halloweenToast.error("Failed to delete user. Please try again 👻"),
@@ -109,7 +109,7 @@ export const authToasts = {
         "Network error. Please check your connection 🌐",
     };
     return halloweenToast.error(
-      messages[error.code] || "Login failed. Please try again 👻"
+      messages[error.code] || "Login failed. Please try again 👻",
     );
   },
   registerSuccess: () =>
@@ -124,7 +124,7 @@ export const authToasts = {
         "Network error. Please check your connection 🌐",
     };
     return halloweenToast.error(
-      messages[error.code] || "Registration failed. Please try again 👻"
+      messages[error.code] || "Registration failed. Please try again 👻",
     );
   },
   logoutSuccess: () =>
