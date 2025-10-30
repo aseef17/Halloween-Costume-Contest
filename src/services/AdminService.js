@@ -58,7 +58,7 @@ export const AdminService = {
       });
       return true;
     } catch (error) {
-      console.error("Error updating app settings:", error);
+      logger.error("Error updating app settings:", error);
       throw error;
     }
   },
@@ -82,7 +82,7 @@ export const AdminService = {
       await updateDoc(settingsRef, updateData);
       return true;
     } catch (error) {
-      console.error("Error toggling voting:", error);
+      logger.error("Error toggling voting:", error);
       throw error;
     }
   },
@@ -97,7 +97,7 @@ export const AdminService = {
       });
       return true;
     } catch (error) {
-      console.error("Error toggling results visibility:", error);
+      logger.error("Error toggling results visibility:", error);
       throw error;
     }
   },
@@ -112,7 +112,7 @@ export const AdminService = {
       });
       return true;
     } catch (error) {
-      console.error("Error toggling self-vote option:", error);
+      logger.error("Error toggling self-vote option:", error);
       throw error;
     }
   },
@@ -127,7 +127,7 @@ export const AdminService = {
       });
       return true;
     } catch (error) {
-      console.error("Error toggling auto-revote option:", error);
+      logger.error("Error toggling auto-revote option:", error);
       throw error;
     }
   },
@@ -151,7 +151,7 @@ export const AdminService = {
       logger.log(`Excluded users: ${excludedUserIds.length}`);
       return true;
     } catch (error) {
-      console.error("Error starting revote:", error);
+      logger.error("Error starting revote:", error);
       throw error;
     }
   },
@@ -274,7 +274,7 @@ export const AdminService = {
 
       return { autoRevoteTriggered: false };
     } catch (error) {
-      console.error("Error closing voting with auto-revote check:", error);
+      logger.error("Error closing voting with auto-revote check:", error);
       throw error;
     }
   },

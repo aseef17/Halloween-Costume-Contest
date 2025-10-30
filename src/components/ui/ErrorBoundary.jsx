@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "motion/react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import Button from "./Button";
+import logger from "../../utils/logger";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -16,7 +17,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     // Log the error to console and any error reporting service
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    logger.error("ErrorBoundary caught an error:", error, errorInfo);
     this.setState({
       error: error,
       errorInfo: errorInfo,

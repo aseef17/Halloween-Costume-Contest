@@ -89,13 +89,13 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       appSettings.revoteCostumeIds.length > 0
     ) {
       filtered = costumes.filter((costume) =>
-        appSettings.revoteCostumeIds.includes(costume.id),
+        appSettings.revoteCostumeIds.includes(costume.id)
       );
     } else {
       // Normal voting mode - filter out own costume if self-voting not allowed
       // BUT if there's only one costume total, allow voting for it
       const otherCostumes = costumes.filter(
-        (costume) => costume.userId !== user?.uid,
+        (costume) => costume.userId !== user?.uid
       );
 
       if (otherCostumes.length === 0 && costumes.length === 1) {
@@ -104,8 +104,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       } else {
         // Multiple costumes exist - apply normal filtering
         filtered = costumes.filter(
-          (costume) =>
-            appSettings.allowSelfVote || costume.userId !== user?.uid,
+          (costume) => appSettings.allowSelfVote || costume.userId !== user?.uid
         );
       }
     }
@@ -131,7 +130,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error signing out:", error);
+      logger.error("Error signing out:", error);
     }
   }, []);
 
@@ -158,7 +157,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         adminToasts.votingDisabled();
       }
     } catch (error) {
-      console.error("Error toggling voting:", error);
+      logger.error("Error toggling voting:", error);
     }
   }, [appSettings.votingEnabled, toggleVoting]);
 
@@ -166,7 +165,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
   const handleCloseVotingAndShowResults = useCallback(async () => {
     try {
       const result = await promiseToast.closeVotingWithAutoRevote(
-        closeVotingWithAutoRevote(costumeResults),
+        closeVotingWithAutoRevote(costumeResults)
       );
       if (result.autoRevoteTriggered) {
         adminToasts.autoRevoteTriggered();
@@ -175,7 +174,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         adminToasts.resultsShown();
       }
     } catch (error) {
-      console.error("Error closing voting and showing results:", error);
+      logger.error("Error closing voting and showing results:", error);
     }
   }, [closeVotingWithAutoRevote, costumeResults]);
 
@@ -187,7 +186,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       adminToasts.votingDisabled();
       adminToasts.resultsHidden();
     } catch (error) {
-      console.error("Error reverting to contest active:", error);
+      logger.error("Error reverting to contest active:", error);
     }
   }, [toggleVoting, toggleResults]);
 
@@ -198,7 +197,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       adminToasts.resultsHidden();
       adminToasts.votingEnabled();
     } catch (error) {
-      console.error("Error reverting to voting enabled:", error);
+      logger.error("Error reverting to voting enabled:", error);
     }
   }, [toggleVoting, toggleResults]);
 
@@ -208,7 +207,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
       await promiseToast.revoteEnd(endRevote());
       adminToasts.revoteEnded();
     } catch (error) {
-      console.error("Error ending revote:", error);
+      logger.error("Error ending revote:", error);
     }
   }, [endRevote]);
 
@@ -238,7 +237,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
 
       // Filter out the current admin user from notifications
@@ -273,7 +272,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         allUsers,
         votes,
         revoteVotes,
-        true,
+        true
       );
 
       // Filter out the current admin user from notifications
@@ -303,7 +302,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
           : "voting_reminder";
         await NotificationService.sendVotingReminders(
           usersToNotify,
-          notificationType,
+          notificationType
         );
 
         adminToasts.votingEnabled(); // Success message for reminders sent
@@ -313,7 +312,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         setIsSendingReminders(false);
       }
     },
-    [appSettings.revoteMode],
+    [appSettings.revoteMode]
   );
 
   // Move to next phase
@@ -348,7 +347,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
 
       // Filter out the current admin user from notifications
@@ -448,7 +447,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {...animationVariants.fadeInDown}
               className={cn(
                 typography.h1,
-                "text-white mb-2 flex items-center gap-3",
+                "text-white mb-2 flex items-center gap-3"
               )}
             >
               <HalloweenIcon type="pumpkin" size="lg" animate />
@@ -785,8 +784,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   {appSettings.votingEnabled
                     ? "Voting is open! Cast your vote for your favorite costume."
                     : appSettings.resultsVisible
-                      ? "The contest has ended. Check out the results!"
-                      : "Submissions are open. Add your costume to join the fun!"}
+                    ? "The contest has ended. Check out the results!"
+                    : "Submissions are open. Add your costume to join the fun!"}
                 </p>
               </div>
 
@@ -795,7 +794,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                   <div
                     className={cn(
                       "h-2.5 w-2.5 rounded-full animate-pulse",
-                      appSettings.contestActive ? "bg-green-500" : "bg-red-500",
+                      appSettings.contestActive ? "bg-green-500" : "bg-red-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -808,7 +807,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
                       "h-2.5 w-2.5 rounded-full animate-pulse",
                       appSettings.votingEnabled
                         ? "bg-green-500"
-                        : "bg-yellow-500",
+                        : "bg-yellow-500"
                     )}
                   />
                   <span className="text-xs sm:text-sm text-gray-300 font-medium">
@@ -1033,8 +1032,8 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
               {costumes.length === 0
                 ? "No costumes have been submitted yet. Be the first to add one!"
                 : costumes.length === 1 && costumes[0]?.userId === user?.uid
-                  ? "You're the only one who has submitted a costume so far. Wait for others to join!"
-                  : "There are no other costumes to vote for at the moment."}
+                ? "You're the only one who has submitted a costume so far. Wait for others to join!"
+                : "There are no other costumes to vote for at the moment."}
             </p>
             {costumes.length === 0 &&
               appSettings.contestActive &&
@@ -1092,7 +1091,7 @@ const Dashboard = ({ onSwitchToAdmin, isAdmin }) => {
         }
         tiedCostumes={costumeResults.filter((costume) => costume.rank === 1)}
         isExcludedFromRevote={appSettings.revoteExcludedUserIds?.includes(
-          user?.uid,
+          user?.uid
         )}
         userCostume={userCostume}
       />

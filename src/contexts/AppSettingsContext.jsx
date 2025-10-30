@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useMemo } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import logger from "../utils/logger";
 
 // Create App Settings Context
 const AppSettingsContext = createContext(null);
@@ -42,9 +43,9 @@ export const AppSettingsProvider = ({ children }) => {
         setIsLoadingSettings(false);
       },
       (error) => {
-        console.error("Error fetching app settings:", error);
+        logger.error("Error fetching app settings:", error);
         setIsLoadingSettings(false);
-      },
+      }
     );
 
     return () => unsubscribe();
@@ -57,7 +58,7 @@ export const AppSettingsProvider = ({ children }) => {
       isLoadingSettings,
       setAppSettings,
     }),
-    [appSettings, isLoadingSettings, setAppSettings],
+    [appSettings, isLoadingSettings, setAppSettings]
   );
 
   return (
@@ -72,7 +73,7 @@ export const useAppSettings = () => {
   const context = React.useContext(AppSettingsContext);
   if (!context) {
     throw new Error(
-      "useAppSettings must be used within an AppSettingsProvider",
+      "useAppSettings must be used within an AppSettingsProvider"
     );
   }
   return context;

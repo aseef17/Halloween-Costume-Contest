@@ -64,7 +64,7 @@ const EmailVerification = ({ userEmail }) => {
         setLastResendTime(Date.now());
       }
     } catch (error) {
-      console.error("Error sending verification email:", error);
+      logger.error("Error sending verification email:", error);
       setError("Failed to send verification email. Please try again.");
     }
 
@@ -103,7 +103,7 @@ const EmailVerification = ({ userEmail }) => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error signing out:", error);
+      logger.error("Error signing out:", error);
     }
   };
 

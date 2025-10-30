@@ -6,6 +6,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { useApp } from "./useApp";
+import logger from "../utils/logger";
 
 /**
  * Custom hook for managing authentication
@@ -94,7 +95,7 @@ export const useAuthForm = (type = "login") => {
         setFormErrors((prev) => ({ ...prev, [field]: null }));
       }
     },
-    [formErrors],
+    [formErrors]
   );
 
   const validateForm = useCallback(() => {
@@ -138,10 +139,10 @@ export const useAuthForm = (type = "login") => {
         }
       } catch (err) {
         // Error is handled by the auth hook
-        console.error("Auth error:", err);
+        logger.error("Auth error:", err);
       }
     },
-    [formData, type, validateForm, login, register],
+    [formData, type, validateForm, login, register]
   );
 
   const resetForm = useCallback(() => {

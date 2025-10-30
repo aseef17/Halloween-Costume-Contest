@@ -78,7 +78,7 @@ const Admin = ({ onSwitchToDashboard }) => {
       }
     } catch (error) {
       // Error is handled by the hook
-      console.error("Error toggling voting:", error);
+      logger.error("Error toggling voting:", error);
     }
   };
 
@@ -92,7 +92,7 @@ const Admin = ({ onSwitchToDashboard }) => {
       }
     } catch (error) {
       // Error is handled by the hook
-      console.error("Error toggling self-vote:", error);
+      logger.error("Error toggling self-vote:", error);
     }
   };
 
@@ -106,7 +106,7 @@ const Admin = ({ onSwitchToDashboard }) => {
       }
     } catch (error) {
       // Error is handled by the hook
-      console.error("Error toggling auto-revote:", error);
+      logger.error("Error toggling auto-revote:", error);
     }
   };
 
@@ -120,7 +120,7 @@ const Admin = ({ onSwitchToDashboard }) => {
       await promiseToast.contestReset(resetContest());
     } catch (error) {
       adminToasts.resetError();
-      console.error("Error resetting contest:", error);
+      logger.error("Error resetting contest:", error);
     }
   };
 
@@ -128,7 +128,7 @@ const Admin = ({ onSwitchToDashboard }) => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error signing out:", error);
+      logger.error("Error signing out:", error);
     }
   };
 
@@ -145,7 +145,7 @@ const Admin = ({ onSwitchToDashboard }) => {
       adminToasts.votingDisabled();
       adminToasts.resultsHidden();
     } catch (error) {
-      console.error("Error reverting to contest active:", error);
+      logger.error("Error reverting to contest active:", error);
     }
   };
 
@@ -156,7 +156,7 @@ const Admin = ({ onSwitchToDashboard }) => {
       adminToasts.resultsHidden();
       adminToasts.votingEnabled();
     } catch (error) {
-      console.error("Error reverting to voting enabled:", error);
+      logger.error("Error reverting to voting enabled:", error);
     }
   };
 
