@@ -8,6 +8,9 @@ import {
   serverTimestamp,
   setDoc,
   getDoc,
+  deleteDoc,
+  query,
+  where,
 } from "firebase/firestore";
 import { ref, listAll, deleteObject } from "firebase/storage";
 import { db, storage } from "../firebaseConfig";
@@ -33,7 +36,7 @@ const commitBatchWithRetry = async (batch, operationName, maxRetries = 3) => {
     } catch (error) {
       logger.error(
         `Error committing ${operationName} batch (attempt ${attempt}/${maxRetries}):`,
-        error,
+        error
       );
 
       if (attempt === maxRetries) {
@@ -207,12 +210,12 @@ export const AdminService = {
       // Get all revote votes
       const revotesSnapshot = await getDocs(collection(db, "revotes"));
       const revoteVoters = revotesSnapshot.docs.map(
-        (doc) => doc.data().voterId,
+        (doc) => doc.data().voterId
       );
 
       // Check if all eligible voters have voted
       const allVoted = eligibleVoters.every((voterId) =>
-        revoteVoters.includes(voterId),
+        revoteVoters.includes(voterId)
       );
 
       return {
@@ -220,7 +223,7 @@ export const AdminService = {
         eligibleVoters: eligibleVoters.length,
         votedVoters: revoteVoters.length,
         remainingVoters: eligibleVoters.filter(
-          (voterId) => !revoteVoters.includes(voterId),
+          (voterId) => !revoteVoters.includes(voterId)
         ),
       };
     } catch (error) {
@@ -254,7 +257,7 @@ export const AdminService = {
           // Start revote automatically (this sets votingEnabled: true and resultsVisible: true)
           await AdminService.startRevote(
             firstPlaceTie.map((costume) => costume.id),
-            excludedUserIds,
+            excludedUserIds
           );
 
           return {
@@ -357,7 +360,7 @@ export const AdminService = {
             // Keep: uid, email, displayName, role, emailVerified, createdAt, lastLogin
           });
           logger.log(
-            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`,
+            `  🔄 Clearing contest data: ${userData.email || userDoc.id}`
           );
           operationCount++;
 
@@ -379,9 +382,9 @@ export const AdminService = {
           batches.map(async (batch, index) => {
             await commitBatchWithRetry(
               batch,
-              `user data clearing batch ${index + 1}`,
+              `user data clearing batch ${index + 1}`
             );
-          }),
+          })
         );
         logger.log(`✅ Cleared contest data for ${usersCount} users`);
       } else {
@@ -433,6 +436,144 @@ export const AdminService = {
       return true;
     } catch (error) {
       logger.error("❌ Error resetting contest:", error);
+      logger.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+      });
+      throw error;
+    }
+  },
+
+  // Delete a user and all their associated data (cascade delete)
+  async deleteUser(userId) {
+    logger.log(`Starting deletion for user: ${userId}`);
+
+    try {
+      // Step 1: Get user data FIRST (needed for image path construction)
+      // We need displayName and uid before deleting the user document
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        throw new Error("User not found");
+      }
+
+      const userData = userSnap.data();
+      const userDisplayName = userData.displayName || "user";
+      logger.log(`Deleting user: ${userData.email || userId}`);
+
+      // Step 2: Delete user's costumes (queried by userId - only this user's costumes)
+      logger.log("Deleting user's costumes...");
+      const costumesRef = collection(db, "costumes");
+      const costumesQuery = query(costumesRef, where("userId", "==", userId));
+      const costumesSnapshot = await getDocs(costumesQuery);
+      const costumesCount = costumesSnapshot.size;
+
+      if (costumesCount > 0) {
+        // Delete costume documents first
+        const costumesBatch = writeBatch(db);
+        costumesSnapshot.forEach((costumeDoc) => {
+          costumesBatch.delete(doc(db, "costumes", costumeDoc.id));
+        });
+        await commitBatchWithRetry(costumesBatch, "costumes deletion");
+        logger.log(`✅ Deleted ${costumesCount} costumes`);
+      } else {
+        logger.log("✅ No costumes to delete");
+      }
+
+      // Step 3: Delete user's costume images from storage
+      // Using the storage path pattern: costume-images/costume-{sanitizedDisplayName}-{userId}
+      logger.log("Deleting user's costume images from storage...");
+      let deletedImagesCount = 0;
+      try {
+        // Sanitize displayName the same way ImageUpload does
+        const sanitizedUserName = userDisplayName
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-");
+        const fileName = `costume-${sanitizedUserName}-${userId}`;
+        const imagePath = `costume-images/${fileName}`;
+        const imageRef = ref(storage, imagePath);
+
+        try {
+          await deleteObject(imageRef);
+          deletedImagesCount++;
+          logger.log(`✅ Deleted image: ${imagePath}`);
+        } catch (error) {
+          // Image might not exist (user never uploaded, or already deleted)
+          if (error.code !== "storage/object-not-found") {
+            logger.error(`Error deleting image ${imagePath}:`, error);
+          } else {
+            logger.log(
+              `Image not found (may already be deleted): ${imagePath}`
+            );
+          }
+        }
+      } catch (error) {
+        logger.error("Error deleting user's images:", error);
+        // Continue even if image deletion fails
+      }
+
+      // Step 4: Delete user's votes (queried by voterId - only votes cast BY this user)
+      logger.log("Deleting user's votes...");
+      const votesRef = collection(db, "votes");
+      const votesQuery = query(votesRef, where("voterId", "==", userId));
+      const votesSnapshot = await getDocs(votesQuery);
+      const votesCount = votesSnapshot.size;
+
+      if (votesCount > 0) {
+        const votesBatch = writeBatch(db);
+        votesSnapshot.forEach((voteDoc) => {
+          votesBatch.delete(doc(db, "votes", voteDoc.id));
+        });
+        await commitBatchWithRetry(votesBatch, "votes deletion");
+        logger.log(`✅ Deleted ${votesCount} votes`);
+      } else {
+        logger.log("✅ No votes to delete");
+      }
+
+      // Step 5: Delete user's revote votes (queried by voterId - only revote votes cast BY this user)
+      logger.log("Deleting user's revote votes...");
+      const revotesRef = collection(db, "revotes");
+      const revotesQuery = query(revotesRef, where("voterId", "==", userId));
+      const revotesSnapshot = await getDocs(revotesQuery);
+      const revotesCount = revotesSnapshot.size;
+
+      if (revotesCount > 0) {
+        const revotesBatch = writeBatch(db);
+        revotesSnapshot.forEach((revoteDoc) => {
+          revotesBatch.delete(doc(db, "revotes", revoteDoc.id));
+        });
+        await commitBatchWithRetry(revotesBatch, "revote votes deletion");
+        logger.log(`✅ Deleted ${revotesCount} revote votes`);
+      } else {
+        logger.log("✅ No revote votes to delete");
+      }
+
+      // Step 6: Delete user document from Firestore LAST
+      // This must be done last because we needed the user data for image deletion
+      logger.log("Deleting user document...");
+      await deleteDoc(userRef);
+      logger.log("✅ User document deleted");
+
+      // Note: Firebase Auth deletion requires Admin SDK (server-side)
+      // The user's authentication will remain but they won't be able to access the app
+      // since their Firestore document is deleted
+
+      logger.log(
+        `🎉 User deletion completed successfully for: ${
+          userData.email || userId
+        }`
+      );
+      return {
+        success: true,
+        deletedCostumes: costumesCount,
+        deletedVotes: votesCount,
+        deletedRevoteVotes: revotesCount,
+        deletedImages: deletedImagesCount,
+      };
+    } catch (error) {
+      logger.error("❌ Error deleting user:", error);
       logger.error("Error details:", {
         message: error.message,
         code: error.code,

@@ -19,6 +19,7 @@ import {
   Loader2,
   Vote,
   UserCircle,
+  Trash2,
 } from "lucide-react";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -45,6 +46,8 @@ const Admin = ({ onSwitchToDashboard }) => {
   const [isRefetching, setIsRefetching] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
 
   const {
     isLoading: isAdminLoading,
@@ -334,6 +337,32 @@ const Admin = ({ onSwitchToDashboard }) => {
       logger.error("Error refetching unvoted users:", error);
     } finally {
       setIsRefetching(false);
+    }
+  };
+
+  // Handle user deletion
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setIsDeletingUser(true);
+    try {
+      await promiseToast.userDeleted(AdminService.deleteUser(userToDelete.uid));
+
+      // Refresh users list
+      const users = await fetchAllUsers();
+      const sortedUsers = users.sort((a, b) => {
+        const aTime = getDateFromTimestamp(a.lastLogin) || new Date(0);
+        const bTime = getDateFromTimestamp(b.lastLogin) || new Date(0);
+        return bTime.getTime() - aTime.getTime();
+      });
+      setAllUsers(sortedUsers);
+
+      setUserToDelete(null);
+    } catch (error) {
+      adminToasts.deleteUserError();
+      logger.error("Error deleting user:", error);
+    } finally {
+      setIsDeletingUser(false);
     }
   };
 
@@ -907,35 +936,53 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <th className="p-3 text-gray-400 font-medium text-sm">
                           Last Login
                         </th>
+                        <th className="p-3 text-gray-400 font-medium text-sm text-right">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {allUsers.map((user) => (
+                      {allUsers.map((userItem) => (
                         <tr
-                          key={user.uid}
+                          key={userItem.uid}
                           className="border-b border-gray-800/50 hover:bg-blue-500/5 transition-colors"
                         >
                           <td className="p-3 text-orange-300 font-medium">
-                            {user.displayName || "N/A"}
+                            {userItem.displayName || "N/A"}
                           </td>
                           <td className="p-3 text-gray-300 text-sm">
-                            {user.email || "N/A"}
+                            {userItem.email || "N/A"}
                           </td>
                           <td className="p-3">
                             <span
                               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                user.role === "admin"
+                                userItem.role === "admin"
                                   ? "bg-purple-900/30 text-purple-300"
                                   : "bg-gray-700/30 text-gray-300"
                               }`}
                             >
-                              {user.role === "admin" ? "Admin" : "User"}
+                              {userItem.role === "admin" ? "Admin" : "User"}
                             </span>
                           </td>
                           <td className="p-3 text-gray-400 text-sm">
-                            {user.lastLogin
-                              ? formatDate(user.lastLogin)
+                            {userItem.lastLogin
+                              ? formatDate(userItem.lastLogin)
                               : "Never"}
+                          </td>
+                          <td className="p-3 text-right">
+                            {userItem.uid !== user?.uid ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setUserToDelete(userItem)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                disabled={isDeletingUser}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            ) : (
+                              <span className="text-gray-500 text-xs">You</span>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -945,9 +992,9 @@ const Admin = ({ onSwitchToDashboard }) => {
 
                 {/* Mobile cards */}
                 <div className="md:hidden space-y-3">
-                  {allUsers.map((user, index) => (
+                  {allUsers.map((userItem, index) => (
                     <motion.div
-                      key={user.uid}
+                      key={userItem.uid}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -956,29 +1003,42 @@ const Admin = ({ onSwitchToDashboard }) => {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <h3 className="text-orange-300 font-semibold">
-                            {user.displayName || "N/A"}
+                            {userItem.displayName || "N/A"}
                           </h3>
                           <p className="text-gray-400 text-xs mt-1">
-                            {user.email || "N/A"}
+                            {userItem.email || "N/A"}
                           </p>
                         </div>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            user.role === "admin"
-                              ? "bg-purple-900/30 text-purple-300"
-                              : "bg-gray-700/30 text-gray-300"
-                          }`}
-                        >
-                          {user.role === "admin" ? "Admin" : "User"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              userItem.role === "admin"
+                                ? "bg-purple-900/30 text-purple-300"
+                                : "bg-gray-700/30 text-gray-300"
+                            }`}
+                          >
+                            {userItem.role === "admin" ? "Admin" : "User"}
+                          </span>
+                          {userItem.uid !== user?.uid && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setUserToDelete(userItem)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 p-2"
+                              disabled={isDeletingUser}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <span className="text-gray-500 text-xs">
                           Last login:
                         </span>
                         <span className="text-gray-400 text-xs">
-                          {user.lastLogin
-                            ? formatDate(user.lastLogin)
+                          {userItem.lastLogin
+                            ? formatDate(userItem.lastLogin)
                             : "Never"}
                         </span>
                       </div>
@@ -1240,6 +1300,22 @@ const Admin = ({ onSwitchToDashboard }) => {
             : "The following users have not yet cast their votes:"
         }
       />
+
+      {/* Delete User Confirmation Modal */}
+      {userToDelete && (
+        <ConfirmationModal
+          isOpen={!!userToDelete}
+          onClose={() => setUserToDelete(null)}
+          onConfirm={handleDeleteUser}
+          title="Delete User"
+          message={`Are you sure you want to delete ${
+            userToDelete.displayName || userToDelete.email || "this user"
+          }? This will permanently delete their profile, all costumes, votes, and uploaded images. Note: Firebase Authentication deletion requires server-side Admin SDK. The user's authentication will remain, but they won't be able to access the app since their Firestore document will be deleted.`}
+          confirmText="Delete User"
+          confirmVariant="destructive"
+          isLoading={isDeletingUser}
+        />
+      )}
     </motion.div>
   );
 };
