@@ -18,7 +18,7 @@ import logger from "../../utils/logger";
 const AuthRouter = () => {
   const { user, authLoading, isAdmin } = useApp();
   const [currentView, setCurrentView] = useState("login");
-  const [adminView, setAdminView] = useState("admin"); // Toggle between admin panel and dashboard for admin users
+  const [adminView, setAdminView] = useState("dashboard"); // Toggle between admin panel and dashboard for admin users
 
   // Form states
   const [email, setEmail] = useState("");
@@ -73,12 +73,13 @@ const AuthRouter = () => {
       if (!user.emailVerified) {
         setCurrentView("email-verification");
       } else {
-        setCurrentView(isAdmin ? "admin" : "dashboard");
+        // Always default to dashboard, admin can switch to admin panel manually
+        setCurrentView("dashboard");
       }
     } else {
       setCurrentView("login");
     }
-  }, [user, isAdmin]);
+  }, [user]);
 
   // Auth handlers
   const handleLogin = async (e) => {
