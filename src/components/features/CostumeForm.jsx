@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Save, Loader2 } from "lucide-react";
 import Button from "../ui/Button";
 import { Input } from "../ui/Input";
@@ -24,6 +24,15 @@ const CostumeForm = ({ costume = null, userId, onSuccess, onCancel }) => {
   const { isLoading, createCostume, updateCostume } = useCostumeOperations();
 
   const isEdit = !!costume;
+
+  // Update form fields when costume prop changes
+  useEffect(() => {
+    if (costume) {
+      setName(costume.name || "");
+      setDescription(costume.description || "");
+      setImageUrl(costume.imageUrl || "");
+    }
+  }, [costume]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -129,6 +138,8 @@ const CostumeForm = ({ costume = null, userId, onSuccess, onCancel }) => {
           </label>
           <ImageUpload
             currentImageUrl={imageUrl}
+            userId={user?.uid}
+            userName={user?.displayName || "user"}
             onImageUpload={(url) => {
               setImageUrl(url);
               setIsUploadingImage(false);
