@@ -1,6 +1,12 @@
 import React, { createContext, useState, useEffect, useMemo } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 import { ADMIN_EMAILS } from "../utils";
 import logger from "../utils/logger";
@@ -32,17 +38,36 @@ export const AuthProvider = ({ children }) => {
 
         if (userSnap.exists()) {
           const userData = userSnap.data();
+
+          // Update lastLogin timestamp every time user opens the app
+          // Only update if last login was more than 1 minute ago to avoid excessive writes
+          const lastLoginTime =
+            userData.lastLogin?.toDate?.() || userData.lastLogin;
+          const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+          const shouldUpdate = !lastLoginTime || lastLoginTime < oneMinuteAgo;
+
+          if (shouldUpdate) {
+            try {
+              await updateDoc(userRef, {
+                lastLogin: serverTimestamp(),
+              });
+            } catch (error) {
+              logger.error("Error updating lastLogin:", error);
+              // Continue even if update fails
+            }
+          }
+
           const userObj = {
             uid: fbUser.uid,
             email: fbUser.email,
             displayName: fbUser.displayName || userData.displayName || "",
             role: userData.role || "user",
             emailVerified: fbUser.emailVerified,
-            lastLogin: new Date(),
+            lastLogin: shouldUpdate ? new Date() : lastLoginTime || new Date(),
           };
           setUser(userObj);
           setIsAdmin(
-            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email),
+            userData.role === "admin" || ADMIN_EMAILS.includes(fbUser.email)
           );
         } else {
           // Create new user profile
@@ -52,12 +77,16 @@ export const AuthProvider = ({ children }) => {
             displayName: fbUser.displayName || "",
             role: "user",
             emailVerified: fbUser.emailVerified,
-            createdAt: new Date(),
-            lastLogin: new Date(),
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
           };
 
           await setDoc(userRef, newUser);
-          setUser(newUser);
+          setUser({
+            ...newUser,
+            createdAt: new Date(),
+            lastLogin: new Date(),
+          });
           setIsAdmin(ADMIN_EMAILS.includes(fbUser.email));
         }
       } else {
@@ -77,7 +106,7 @@ export const AuthProvider = ({ children }) => {
       authLoading,
       isAdmin,
     }),
-    [user, authLoading, isAdmin],
+    [user, authLoading, isAdmin]
   );
 
   return (

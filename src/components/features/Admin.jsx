@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebaseConfig";
@@ -18,6 +18,7 @@ import {
   Trophy,
   Loader2,
   Vote,
+  UserCircle,
 } from "lucide-react";
 import Button from "../ui/Button";
 import Card from "../ui/Card";
@@ -42,6 +43,8 @@ const Admin = ({ onSwitchToDashboard }) => {
   const [isSendingReminders, setIsSendingReminders] = useState(false);
   const [isMovingToNextPhase, setIsMovingToNextPhase] = useState(false);
   const [isRefetching, setIsRefetching] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
   const {
     isLoading: isAdminLoading,
@@ -183,6 +186,40 @@ const Admin = ({ onSwitchToDashboard }) => {
     }
   };
 
+  // Helper function to convert Firestore Timestamp to Date
+  const getDateFromTimestamp = (timestamp) => {
+    if (!timestamp) return null;
+    if (timestamp.toDate) return timestamp.toDate();
+    if (timestamp instanceof Date) return timestamp;
+    if (typeof timestamp === "string" || typeof timestamp === "number") {
+      return new Date(timestamp);
+    }
+    return null;
+  };
+
+  // Load users on component mount
+  useEffect(() => {
+    const loadUsers = async () => {
+      setIsLoadingUsers(true);
+      try {
+        const users = await fetchAllUsers();
+        // Sort users by lastLogin descending (most recent first)
+        const sortedUsers = users.sort((a, b) => {
+          const aTime = getDateFromTimestamp(a.lastLogin) || new Date(0);
+          const bTime = getDateFromTimestamp(b.lastLogin) || new Date(0);
+          return bTime.getTime() - aTime.getTime();
+        });
+        setAllUsers(sortedUsers);
+      } catch (error) {
+        logger.error("Error loading users:", error);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    loadUsers();
+  }, []);
+
   // Handle closing voting with unvoted users check
   const handleCloseVotingWithUnvotedCheck = async () => {
     try {
@@ -191,7 +228,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
 
       // Filter out the current admin user from notifications
@@ -219,7 +256,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        true,
+        true
       );
 
       // Filter out the current admin user from notifications
@@ -248,7 +285,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         : "voting_reminder";
       await NotificationService.sendVotingReminders(
         usersToNotify,
-        notificationType,
+        notificationType
       );
 
       adminToasts.votingEnabled(); // Success message for reminders sent
@@ -287,7 +324,7 @@ const Admin = ({ onSwitchToDashboard }) => {
         allUsers,
         votes,
         revoteVotes,
-        appSettings.revoteMode,
+        appSettings.revoteMode
       );
 
       // Filter out the current admin user from notifications
@@ -797,11 +834,167 @@ const Admin = ({ onSwitchToDashboard }) => {
           </div>
         </Card>
       </motion.div>
-      {/* Costume Submissions - Mobile responsive */}
+      {/* Users List - Mobile responsive */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
+      >
+        <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-black/60 via-gray-900/60 to-blue-900/40 border-blue-500/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
+          <div className="relative p-5 sm:p-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h2 className="text-2xl sm:text-3xl font-halloween text-orange-300 flex items-center gap-2">
+                <UserCircle className="h-6 w-6" />
+                Application Users
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  setIsLoadingUsers(true);
+                  try {
+                    const users = await fetchAllUsers();
+                    const sortedUsers = users.sort((a, b) => {
+                      const aTime =
+                        getDateFromTimestamp(a.lastLogin) || new Date(0);
+                      const bTime =
+                        getDateFromTimestamp(b.lastLogin) || new Date(0);
+                      return bTime.getTime() - aTime.getTime();
+                    });
+                    setAllUsers(sortedUsers);
+                  } catch (error) {
+                    logger.error("Error refreshing users:", error);
+                  } finally {
+                    setIsLoadingUsers(false);
+                  }
+                }}
+                disabled={isLoadingUsers}
+                className="flex items-center gap-2 text-blue-300 hover:text-blue-200"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoadingUsers ? "animate-spin" : ""}`}
+                />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+            </div>
+
+            {isLoadingUsers && allUsers.length === 0 ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-orange-300 mx-auto mb-2" />
+                <p className="text-gray-400">Loading users...</p>
+              </div>
+            ) : allUsers.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">
+                No users found in the application.
+              </p>
+            ) : (
+              <>
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="text-left border-b border-blue-500/20">
+                        <th className="p-3 text-gray-400 font-medium text-sm">
+                          Name
+                        </th>
+                        <th className="p-3 text-gray-400 font-medium text-sm">
+                          Email
+                        </th>
+                        <th className="p-3 text-gray-400 font-medium text-sm">
+                          Role
+                        </th>
+                        <th className="p-3 text-gray-400 font-medium text-sm">
+                          Last Login
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allUsers.map((user) => (
+                        <tr
+                          key={user.uid}
+                          className="border-b border-gray-800/50 hover:bg-blue-500/5 transition-colors"
+                        >
+                          <td className="p-3 text-orange-300 font-medium">
+                            {user.displayName || "N/A"}
+                          </td>
+                          <td className="p-3 text-gray-300 text-sm">
+                            {user.email || "N/A"}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                user.role === "admin"
+                                  ? "bg-purple-900/30 text-purple-300"
+                                  : "bg-gray-700/30 text-gray-300"
+                              }`}
+                            >
+                              {user.role === "admin" ? "Admin" : "User"}
+                            </span>
+                          </td>
+                          <td className="p-3 text-gray-400 text-sm">
+                            {user.lastLogin
+                              ? formatDate(user.lastLogin)
+                              : "Never"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile cards */}
+                <div className="md:hidden space-y-3">
+                  {allUsers.map((user, index) => (
+                    <motion.div
+                      key={user.uid}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="p-4 rounded-xl bg-gradient-to-br from-black/40 to-blue-900/20 border border-blue-500/20"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-orange-300 font-semibold">
+                            {user.displayName || "N/A"}
+                          </h3>
+                          <p className="text-gray-400 text-xs mt-1">
+                            {user.email || "N/A"}
+                          </p>
+                        </div>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            user.role === "admin"
+                              ? "bg-purple-900/30 text-purple-300"
+                              : "bg-gray-700/30 text-gray-300"
+                          }`}
+                        >
+                          {user.role === "admin" ? "Admin" : "User"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-gray-500 text-xs">
+                          Last login:
+                        </span>
+                        <span className="text-gray-400 text-xs">
+                          {user.lastLogin
+                            ? formatDate(user.lastLogin)
+                            : "Never"}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </Card>
+      </motion.div>
+      {/* Costume Submissions - Mobile responsive */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.35 }}
       >
         <Card className="mb-6 sm:mb-8 overflow-hidden backdrop-blur-xl bg-gradient-to-br from-black/60 via-gray-900/60 to-purple-900/40 border-purple-500/30">
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent pointer-events-none" />
@@ -857,7 +1050,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                             <span className="inline-flex items-center justify-center w-8 h-8 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                               {
                                 votes.filter(
-                                  (vote) => vote.costumeId === costume.id,
+                                  (vote) => vote.costumeId === costume.id
                                 ).length
                               }
                             </span>
@@ -885,7 +1078,7 @@ const Admin = ({ onSwitchToDashboard }) => {
                         <span className="inline-flex items-center justify-center px-2 py-1 text-orange-300 bg-orange-900/30 rounded-full font-medium text-sm">
                           {
                             votes.filter(
-                              (vote) => vote.costumeId === costume.id,
+                              (vote) => vote.costumeId === costume.id
                             ).length
                           }{" "}
                           votes
