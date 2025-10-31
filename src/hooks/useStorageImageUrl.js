@@ -5,7 +5,7 @@ import { storage } from "../firebaseConfig";
 /**
  * Hook to convert a Firebase Storage path to a download URL
  * Handles both Storage paths and existing download URLs for backward compatibility
- * 
+ *
  * @param {string} imagePathOrUrl - Storage path (e.g., "costume-images/file.jpg") or existing download URL
  * @returns {string|null} - Download URL or null if loading/error
  */
@@ -22,7 +22,10 @@ export const useStorageImageUrl = (imagePathOrUrl) => {
     }
 
     // Check if it's already a full URL (backward compatibility)
-    if (imagePathOrUrl.startsWith("http://") || imagePathOrUrl.startsWith("https://")) {
+    if (
+      imagePathOrUrl.startsWith("http://") ||
+      imagePathOrUrl.startsWith("https://")
+    ) {
       setImageUrl(imagePathOrUrl);
       setIsLoading(false);
       return;
@@ -31,9 +34,9 @@ export const useStorageImageUrl = (imagePathOrUrl) => {
     // It's a Storage path, convert to download URL
     setIsLoading(true);
     setError(null);
-    
+
     const imageRef = ref(storage, imagePathOrUrl);
-    
+
     getDownloadURL(imageRef)
       .then((url) => {
         setImageUrl(url);
@@ -50,4 +53,3 @@ export const useStorageImageUrl = (imagePathOrUrl) => {
 
   return { imageUrl, isLoading, error };
 };
-

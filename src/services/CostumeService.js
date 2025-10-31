@@ -69,24 +69,27 @@ export const CostumeService = {
   async deleteCostume(costumeId) {
     try {
       const costumeRef = doc(db, "costumes", costumeId);
-      
+
       // Get the costume document to access the imageUrl before deleting
       const costumeDoc = await getDoc(costumeRef);
-      
+
       if (!costumeDoc.exists()) {
         throw new Error("Costume not found");
       }
-      
+
       const costumeData = costumeDoc.data();
       const imageUrl = costumeData?.imageUrl;
-      
+
       // Delete the associated image from Storage if it exists
       if (imageUrl) {
         try {
           let storagePath = imageUrl;
-          
+
           // If it's a download URL, extract the path
-          if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+          if (
+            imageUrl.startsWith("http://") ||
+            imageUrl.startsWith("https://")
+          ) {
             // Parse the URL to extract the path
             // Format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=...
             try {
@@ -97,10 +100,13 @@ export const CostumeService = {
                 storagePath = decodeURIComponent(pathMatch[1]);
               }
             } catch (e) {
-              logger.warn("Could not parse download URL, using as Storage path:", e);
+              logger.warn(
+                "Could not parse download URL, using as Storage path:",
+                e,
+              );
             }
           }
-          
+
           const imageRef = ref(storage, storagePath);
           await deleteObject(imageRef);
           logger.log(`✅ Deleted image: ${storagePath}`);
@@ -114,7 +120,7 @@ export const CostumeService = {
           }
         }
       }
-      
+
       // Delete the costume document
       await deleteDoc(costumeRef);
       logger.log(`✅ Deleted costume: ${costumeId}`);
