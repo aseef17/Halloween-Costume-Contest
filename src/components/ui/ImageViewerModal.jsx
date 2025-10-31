@@ -96,7 +96,7 @@ const ImageViewerModal = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ delay: 0.3 }}
-            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-black/50 rounded-full text-white text-sm"
+            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 px-4 py-2 bg-black/50 rounded-full text-white text-sm whitespace-nowrap"
           >
             <ZoomIn className="h-4 w-4" />
             <span>Click outside to close</span>
