@@ -2,15 +2,11 @@ import React, { useState, useRef } from "react";
 import { Upload, X, Image as ImageIcon, Loader2, Camera } from "lucide-react";
 import Button from "./Button";
 import { storage } from "../../firebaseConfig";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  deleteObject,
-} from "firebase/storage";
+import { ref, uploadBytes, deleteObject } from "firebase/storage";
 import { costumeToasts } from "../../utils/toastUtils";
 import { motion } from "motion/react";
 import logger from "../../utils/logger";
+import { useStorageImageUrl } from "../../hooks/useStorageImageUrl";
 
 const ImageUpload = ({
   onImageUpload,
@@ -26,6 +22,10 @@ const ImageUpload = ({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+
+  // Convert Storage path to download URL for preview
+  const { imageUrl: previewUrl, isLoading: isLoadingPreview } =
+    useStorageImageUrl(currentImageUrl);
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -51,14 +51,19 @@ const ImageUpload = ({
       const sanitizedUserName = userName
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "-");
-      const fileName = `costume-${sanitizedUserName}-${userId}`;
+
+      // Extract file extension from original filename
+      const fileExtension = file.name.split(".").pop() || "jpg";
+      const fileName = `costume-${sanitizedUserName}-${userId}.${fileExtension}`;
       const imageRef = ref(storage, `costume-images/${fileName}`);
 
       // Upload the file
-      const snapshot = await uploadBytes(imageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      await uploadBytes(imageRef, file);
 
-      onImageUpload(downloadURL);
+      // Store the Storage path instead of download URL to avoid expiration
+      // The path will be converted to a download URL when displaying images
+      const storagePath = `costume-images/${fileName}`;
+      onImageUpload(storagePath);
       costumeToasts.uploadSuccess();
     } catch (error) {
       logger.error("Error uploading image:", error);
@@ -72,8 +77,34 @@ const ImageUpload = ({
     if (!currentImageUrl) return;
 
     try {
-      // ref can take a full download URL directly
-      const imageRef = ref(storage, currentImageUrl);
+      // currentImageUrl can be either a Storage path or a legacy download URL
+      // Extract the path from download URL if it's a full URL, otherwise use as-is
+      let storagePath = currentImageUrl;
+
+      // If it's a download URL, extract the path
+      if (
+        currentImageUrl.startsWith("http://") ||
+        currentImageUrl.startsWith("https://")
+      ) {
+        // Parse the URL to extract the path
+        // Format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=...
+        try {
+          const url = new URL(currentImageUrl);
+          const pathMatch = url.pathname.match(/\/o\/(.+)$/);
+          if (pathMatch) {
+            // Decode the path (it's URL-encoded)
+            storagePath = decodeURIComponent(pathMatch[1]);
+          }
+        } catch (e) {
+          // If parsing fails, try to use the currentImageUrl as-is
+          logger.warn(
+            "Could not parse download URL, using as Storage path:",
+            e,
+          );
+        }
+      }
+
+      const imageRef = ref(storage, storagePath);
       await deleteObject(imageRef);
       onImageRemove();
     } catch (error) {
@@ -118,11 +149,21 @@ const ImageUpload = ({
       {currentImageUrl ? (
         <div className="relative group">
           <div className="relative overflow-hidden rounded-xl border-2 border-orange-500/30 bg-black/40">
-            <img
-              src={currentImageUrl}
-              alt="Costume preview"
-              className="w-full h-48 object-cover"
-            />
+            {isLoadingPreview ? (
+              <div className="w-full h-48 flex items-center justify-center bg-black/20">
+                <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+              </div>
+            ) : previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Costume preview"
+                className="w-full h-48 object-cover"
+              />
+            ) : (
+              <div className="w-full h-48 flex items-center justify-center bg-black/20 text-gray-400">
+                Image not available
+              </div>
+            )}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <Button
                 type="button"

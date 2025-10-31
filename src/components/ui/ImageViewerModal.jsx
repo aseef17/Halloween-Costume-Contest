@@ -1,7 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ZoomIn, Download } from "lucide-react";
+import { X, ZoomIn, Download, Loader2 } from "lucide-react";
 import Button from "./Button";
+import { useStorageImageUrl } from "../../hooks/useStorageImageUrl";
 
 const ImageViewerModal = ({
   isOpen,
@@ -11,6 +12,9 @@ const ImageViewerModal = ({
   ownerName = "",
   costumeName = "",
 }) => {
+  // Convert Storage path to download URL if needed
+  const { imageUrl: displayUrl, isLoading } = useStorageImageUrl(imageUrl);
+
   if (!imageUrl) return null;
 
   return (
@@ -64,15 +68,26 @@ const ImageViewerModal = ({
             className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center overflow-hidden rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={imageUrl}
-              alt={imageAlt}
-              className="max-w-full max-h-full object-contain shadow-2xl"
-              style={{
-                maxWidth: "95vw",
-                maxHeight: "95vh",
-              }}
-            />
+            {isLoading ? (
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-12 h-12 text-white animate-spin" />
+                <p className="text-white/70">Loading image...</p>
+              </div>
+            ) : displayUrl ? (
+              <img
+                src={displayUrl}
+                alt={imageAlt}
+                className="max-w-full max-h-full object-contain shadow-2xl"
+                style={{
+                  maxWidth: "95vw",
+                  maxHeight: "95vh",
+                }}
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-4 text-white/70">
+                <p>Image not available</p>
+              </div>
+            )}
           </motion.div>
 
           {/* Zoom indicator */}

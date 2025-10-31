@@ -5,12 +5,14 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   query,
   where,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { ref, deleteObject } from "firebase/storage";
+import { db, storage } from "../firebaseConfig";
 import logger from "../utils/logger";
 
 export const CostumeService = {
@@ -67,7 +69,55 @@ export const CostumeService = {
   async deleteCostume(costumeId) {
     try {
       const costumeRef = doc(db, "costumes", costumeId);
+      
+      // Get the costume document to access the imageUrl before deleting
+      const costumeDoc = await getDoc(costumeRef);
+      
+      if (!costumeDoc.exists()) {
+        throw new Error("Costume not found");
+      }
+      
+      const costumeData = costumeDoc.data();
+      const imageUrl = costumeData?.imageUrl;
+      
+      // Delete the associated image from Storage if it exists
+      if (imageUrl) {
+        try {
+          let storagePath = imageUrl;
+          
+          // If it's a download URL, extract the path
+          if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            // Parse the URL to extract the path
+            // Format: https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH?alt=media&token=...
+            try {
+              const url = new URL(imageUrl);
+              const pathMatch = url.pathname.match(/\/o\/(.+)$/);
+              if (pathMatch) {
+                // Decode the path (it's URL-encoded)
+                storagePath = decodeURIComponent(pathMatch[1]);
+              }
+            } catch (e) {
+              logger.warn("Could not parse download URL, using as Storage path:", e);
+            }
+          }
+          
+          const imageRef = ref(storage, storagePath);
+          await deleteObject(imageRef);
+          logger.log(`✅ Deleted image: ${storagePath}`);
+        } catch (error) {
+          // Log error but don't fail the costume deletion if image deletion fails
+          // Image might not exist (already deleted, or never uploaded)
+          if (error.code !== "storage/object-not-found") {
+            logger.error("Error deleting costume image:", error);
+          } else {
+            logger.log("Image not found (may already be deleted)");
+          }
+        }
+      }
+      
+      // Delete the costume document
       await deleteDoc(costumeRef);
+      logger.log(`✅ Deleted costume: ${costumeId}`);
       return true;
     } catch (error) {
       logger.error("Error deleting costume:", error);

@@ -8,6 +8,7 @@ import {
   HelpCircle,
   CheckCircle2,
   ZoomIn,
+  Loader2,
 } from "lucide-react";
 import Button from "../ui/Button";
 import ImageViewerModal from "../ui/ImageViewerModal";
@@ -19,6 +20,7 @@ import { promiseToast } from "../../utils/toastUtils";
 import { ariaLabels, keyboardNavigation } from "../../utils/accessibility";
 import { animationVariants, hoverAnimations } from "../../utils/animations";
 import logger from "../../utils/logger";
+import { useStorageImageUrl } from "../../hooks/useStorageImageUrl";
 
 const CostumeCard = ({
   costume,
@@ -31,6 +33,10 @@ const CostumeCard = ({
   const { user, appSettings, currentUserVote } = useApp();
   const { isLoading, voteForCostume, deleteCostume } = useCostumeOperations();
   const [showImageViewer, setShowImageViewer] = useState(false);
+
+  // Convert Storage path to download URL for display
+  const { imageUrl: displayImageUrl, isLoading: isLoadingImage } =
+    useStorageImageUrl(costume.imageUrl);
 
   // Memoized computed values
   const computedValues = useMemo(() => {
@@ -200,11 +206,21 @@ const CostumeCard = ({
                 }
               }}
             >
-              <img
-                src={costume.imageUrl}
-                alt={`${costume.name} costume`}
-                className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              {isLoadingImage ? (
+                <div className="w-full h-48 flex items-center justify-center bg-black/20">
+                  <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+                </div>
+              ) : displayImageUrl ? (
+                <img
+                  src={displayImageUrl}
+                  alt={`${costume.name} costume`}
+                  className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              ) : (
+                <div className="w-full h-48 flex items-center justify-center bg-black/20 text-gray-400">
+                  Image not available
+                </div>
+              )}
               {/* Zoom overlay */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
                 <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -372,7 +388,7 @@ const CostumeCard = ({
       <ImageViewerModal
         isOpen={showImageViewer}
         onClose={() => setShowImageViewer(false)}
-        imageUrl={costume.imageUrl}
+        imageUrl={displayImageUrl || costume.imageUrl}
         imageAlt={`${costume.name} costume`}
         ownerName={costume.userName}
         costumeName={costume.name}
